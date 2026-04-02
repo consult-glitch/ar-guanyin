@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>AR 觀音體驗</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+        * { margin: 0; padding: 0; }
+        body { overflow: hidden; font-family: -apple-system, sans-serif; }
+
+        /* Loading overlay */
+        #loading-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 9999;
+            background: linear-gradient(135deg, #1a0a2e, #16213e);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            transition: opacity 0.6s ease;
+        }
+        #loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        #loading-overlay svg {
+            width: 60px; height: 60px;
+            margin-bottom: 20px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+        #loading-overlay h2 {
+            font-size: 20px;
+            background: linear-gradient(135deg, #FFD54F, #FF8A65);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        #loading-overlay p {
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+        }
+
+        /* Top HUD */
+        #hud-top {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+            padding: 12px 16px;
+            padding-top: max(12px, env(safe-area-inset-top));
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
+        }
+
+        .hud-badge {
+            padding: 6px 14px;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 20px;
+            font-size: 12px;
+            color: #fff;
+        }
+
+        .hud-badge.gold {
+            border-color: rgba(255, 200, 60, 0.3);
+            color: #FFD54F;
+        }
+
+        /* Scan hint */
+        #scan-hint {
+            position: fixed;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            text-align: center;
+            animation: hintBounce 2s ease-in-out infinite;
+        }
+        @keyframes hintBounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-8px); }
+        }
+        #scan-hint .hint-box {
+            padding: 12px 24px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 16px;
+            font-size: 14px;
+            color: #fff;
+        }
+        #scan-hint .hint-sub {
+            font-size: 11px;
+            color: rgba(255,255,255,0.4);
+            margin-top: 4px;
+        }
+        #scan-hint.found .hint-box {
+            background: rgba(255, 183, 77, 0.2);
+            border-color: rgba(255, 183, 77, 0.4);
+            color: #FFD54F;
+        }
+
+        /* Bottom bar */
+        #bottom-bar {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            z-index: 100;
+            padding: 16px;
+            padding-bottom: max(16px, env(safe-area-inset-bottom));
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            background: linear-gradient(to top, rgba(0,0,0,0.5), transparent);
+        }
+
+        .action-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, #FFB74D, #FF8A65);
+            color: #1a0a2e;
+        }
+
+        .action-btn.secondary {
+            background: rgba(255,255,255,0.12);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            padding: 12px 24px;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 200, 60, 0.3);
+            color: #FFD54F;
+            border-radius: 25px;
+            font-size: 13px;
+            animation: toastAnim 2.5s ease forwards;
+        }
+        @keyframes toastAnim {
+            0% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+            15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            80% { opacity: 1; }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+        }
+
+        /* Info modal */
+        #info-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 5000;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        #info-modal.active { display: flex; }
+        .modal-card {
+            background: linear-gradient(135deg, #1e1040, #1a1a3e);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            padding: 28px;
+            max-width: 340px;
+            width: 100%;
+        }
+        .modal-card h3 {
+            font-size: 18px;
+            color: #FFD54F;
+            margin-bottom: 12px;
+        }
+        .modal-card p {
+            font-size: 13px;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.7;
+            margin-bottom: 16px;
+        }
+        .modal-close {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #FFB74D, #FF8A65);
+            color: #1a0a2e;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loading-overlay">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#FFD54F"/>
+                <stop offset="100%" style="stop-color:#FF8A65"/>
+            </linearGradient>
+        </defs>
+        <ellipse cx="50" cy="55" rx="12" ry="30" fill="url(#lg)" opacity="0.9" transform="rotate(-30 50 55)"/>
+        <ellipse cx="50" cy="55" rx="12" ry="30" fill="url(#lg)" opacity="0.9" transform="rotate(30 50 55)"/>
+        <ellipse cx="50" cy="55" rx="12" ry="30" fill="url(#lg)" opacity="0.7" transform="rotate(-60 50 55)"/>
+        <ellipse cx="50" cy="55" rx="12" ry="30" fill="url(#lg)" opacity="0.7" transform="rotate(60 50 55)"/>
+        <circle cx="50" cy="50" r="6" fill="#fff" opacity="0.8"/>
+    </svg>
+    <h2>AR 觀音體驗</h2>
+    <p>正在啟動相機...</p>
+</div>
+
+<!-- Top HUD -->
+<div id="hud-top">
+    <span class="hud-badge">高雄就服站</span>
+    <span class="hud-badge gold" id="status-badge">🔍 搜尋中</span>
+</div>
+
+<!-- Scan Hint -->
+<div id="scan-hint">
+    <div class="hint-box">📷 請將相機對準桌上的蓮花圖</div>
+    <div class="hint-sub">觀音將從圖上顯現</div>
+</div>
+
+<!-- Bottom Bar -->
+<div id="bottom-bar">
+    <button class="action-btn secondary" onclick="capturePhoto()">📸 打卡</button>
+    <button class="action-btn primary" onclick="showInfoModal()">📋 就業資訊</button>
+    <button class="action-btn secondary" onclick="shareExp()">📤 分享</button>
+</div>
+
+<!-- Info Modal -->
+<div id="info-modal">
+    <div class="modal-card">
+        <h3>💼 就業服務資訊</h3>
+        <p>
+            歡迎來到高雄市訓練就業中心！<br><br>
+            我們提供：<br>
+            ✦ 職業訓練課程<br>
+            ✦ 就業媒合服務<br>
+            ✦ 創業輔導諮詢<br>
+            ✦ 職涯探索工具<br><br>
+            掃描現場其他 AR 標記，解鎖更多就業資訊！
+        </p>
+        <button class="modal-close" onclick="closeInfoModal()">了解！繼續體驗</button>
+    </div>
+</div>
+
+<!-- AR Scene -->
+<a-scene
+    embedded
+    arjs="sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3; debugUIEnabled: false;"
+    renderer="logarithmicDepthBuffer: true; antialias: true; alpha: true;"
+    vr-mode-ui="enabled: false"
+    gesture-detector
+    id="ar-scene"
+>
+    <!-- Use barcode marker (3x3 matrix, value 0) -->
+    <a-marker type="barcode" value="0" id="ar-marker" emitevents="true"
+        smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
+        
+        <!-- Lotus base platform -->
+        <a-entity position="0 0 0" rotation="-90 0 0">
+            <!-- Lotus base -->
+            <a-torus position="0 0 0" radius="0.5" radius-tubular="0.08" 
+                color="#D4A574" material="opacity: 0.7; transparent: true;" 
+                segments-radial="16" segments-tubular="8">
+            </a-torus>
+            <a-torus position="0 0 0.05" radius="0.45" radius-tubular="0.06" 
+                color="#E8C89E" material="opacity: 0.5; transparent: true;" 
+                segments-radial="16" segments-tubular="8">
+            </a-torus>
+        </a-entity>
+        
+        <!-- Guanyin body -->
+        <a-entity position="0 0.6 0">
+            <!-- Lower robe (cone) -->
+            <a-cone position="0 -0.25 0" radius-bottom="0.35" radius-top="0.2" height="0.7"
+                color="#E8D5B7" material="opacity: 0.85; transparent: true; side: double;"
+                segments-radial="16">
+            </a-cone>
+
+            <!-- Upper body -->
+            <a-cone position="0 0.2 0" radius-bottom="0.2" radius-top="0.12" height="0.5"
+                color="#F0E0C8" material="opacity: 0.85; transparent: true; side: double;"
+                segments-radial="12">
+            </a-cone>
+
+            <!-- Head -->
+            <a-sphere position="0 0.58 0" radius="0.13"
+                color="#F5EAD8" material="opacity: 0.9; transparent: true;">
+            </a-sphere>
+
+            <!-- Crown/hair bun -->
+            <a-cone position="0 0.78 0" radius-bottom="0.1" radius-top="0.03" height="0.18"
+                color="#C9A96E" material="opacity: 0.85; transparent: true;"
+                segments-radial="8">
+            </a-cone>
+            <a-sphere position="0 0.88 0" radius="0.04"
+                color="#FFD54F" material="opacity: 0.9; transparent: true;">
+            </a-sphere>
+
+            <!-- Halo ring behind head -->
+            <a-torus position="0 0.6 -0.08" rotation="0 0 0" 
+                radius="0.25" radius-tubular="0.012"
+                color="#FFD54F" material="opacity: 0.5; transparent: true; emissive: #FFD54F; emissiveIntensity: 0.5;"
+                segments-radial="32" segments-tubular="8">
+            </a-torus>
+            <a-torus position="0 0.6 -0.1" rotation="0 0 0" 
+                radius="0.3" radius-tubular="0.008"
+                color="#FFA726" material="opacity: 0.3; transparent: true; emissive: #FFA726; emissiveIntensity: 0.3;"
+                segments-radial="32" segments-tubular="8">
+            </a-torus>
+
+            <!-- Left arm/sleeve -->
+            <a-cylinder position="-0.2 0.05 0.05" radius="0.05" height="0.45"
+                rotation="0 0 20"
+                color="#E8D5B7" material="opacity: 0.7; transparent: true;"
+                segments-radial="8">
+            </a-cylinder>
+            <!-- Left hand (prayer) -->
+            <a-sphere position="-0.08 -0.08 0.1" radius="0.04"
+                color="#F5EAD8" material="opacity: 0.8; transparent: true;">
+            </a-sphere>
+
+            <!-- Right arm/sleeve -->
+            <a-cylinder position="0.2 0.05 0.05" radius="0.05" height="0.45"
+                rotation="0 0 -20"
+                color="#E8D5B7" material="opacity: 0.7; transparent: true;"
+                segments-radial="8">
+            </a-cylinder>
+            <!-- Right hand (prayer) -->
+            <a-sphere position="0.08 -0.08 0.1" radius="0.04"
+                color="#F5EAD8" material="opacity: 0.8; transparent: true;">
+            </a-sphere>
+
+            <!-- Vase in hands -->
+            <a-cylinder position="0 -0.1 0.12" radius="0.035" height="0.12"
+                color="#B8860B" material="opacity: 0.8; transparent: true;">
+            </a-cylinder>
+            <a-sphere position="0 -0.04 0.12" radius="0.04"
+                color="#DAA520" material="opacity: 0.7; transparent: true;">
+            </a-sphere>
+
+            <!-- Flowing scarves/ribbons -->
+            <a-cylinder position="-0.25 0.15 0" radius="0.02" height="0.6"
+                rotation="0 0 10"
+                color="#FFE0B2" material="opacity: 0.4; transparent: true;">
+            </a-cylinder>
+            <a-cylinder position="0.25 0.15 0" radius="0.02" height="0.6"
+                rotation="0 0 -10"
+                color="#FFE0B2" material="opacity: 0.4; transparent: true;">
+            </a-cylinder>
+        </a-entity>
+
+        <!-- Glow light -->
+        <a-light type="point" intensity="0.8" distance="3" color="#FFD54F" position="0 1.2 0.5"></a-light>
+
+        <!-- Floating particles (small spheres) -->
+        <a-sphere position="0.3 0.8 0.2" radius="0.015" color="#FFD54F" 
+            material="opacity: 0.6; transparent: true;"
+            animation="property: position; to: 0.3 1.2 0.2; dur: 3000; easing: easeInOutSine; loop: true; dir: alternate;">
+        </a-sphere>
+        <a-sphere position="-0.25 0.6 0.15" radius="0.012" color="#FFA726" 
+            material="opacity: 0.5; transparent: true;"
+            animation="property: position; to: -0.25 1.0 0.15; dur: 2500; easing: easeInOutSine; loop: true; dir: alternate;">
+        </a-sphere>
+        <a-sphere position="0.15 0.5 -0.1" radius="0.01" color="#FFD54F" 
+            material="opacity: 0.4; transparent: true;"
+            animation="property: position; to: 0.15 0.9 -0.1; dur: 2800; easing: easeInOutSine; loop: true; dir: alternate;">
+        </a-sphere>
+        <a-sphere position="-0.1 0.7 0.25" radius="0.013" color="#FFE082" 
+            material="opacity: 0.5; transparent: true;"
+            animation="property: position; to: -0.1 1.1 0.25; dur: 3200; easing: easeInOutSine; loop: true; dir: alternate;">
+        </a-sphere>
+        <a-sphere position="0.2 0.9 -0.15" radius="0.011" color="#FFB74D" 
+            material="opacity: 0.45; transparent: true;"
+            animation="property: position; to: 0.2 1.3 -0.15; dur: 2600; easing: easeInOutSine; loop: true; dir: alternate;">
+        </a-sphere>
+    </a-marker>
+
+    <a-entity camera></a-entity>
+</a-scene>
+
+<script>
+// Hide loading overlay once scene is ready
+const scene = document.getElementById('ar-scene');
+scene.addEventListener('loaded', () => {
+    setTimeout(() => {
+        document.getElementById('loading-overlay').classList.add('hidden');
+    }, 1500);
+});
+
+// Also hide after timeout as fallback
+setTimeout(() => {
+    document.getElementById('loading-overlay').classList.add('hidden');
+}, 4000);
+
+// Marker detection events
+const marker = document.getElementById('ar-marker');
+marker.addEventListener('markerFound', () => {
+    document.getElementById('status-badge').textContent = '✨ 觀音顯現';
+    document.getElementById('status-badge').style.borderColor = 'rgba(76, 175, 80, 0.4)';
+    document.getElementById('status-badge').style.color = '#81C784';
+    const hint = document.getElementById('scan-hint');
+    hint.classList.add('found');
+    hint.querySelector('.hint-box').textContent = '🙏 觀音菩薩已顯現';
+    hint.querySelector('.hint-sub').textContent = '移動手機改變觀看角度';
+    setTimeout(() => { hint.style.opacity = '0'; }, 3000);
+});
+
+marker.addEventListener('markerLost', () => {
+    document.getElementById('status-badge').textContent = '🔍 搜尋中';
+    document.getElementById('status-badge').style.borderColor = 'rgba(255, 200, 60, 0.3)';
+    document.getElementById('status-badge').style.color = '#FFD54F';
+    const hint = document.getElementById('scan-hint');
+    hint.style.opacity = '1';
+    hint.classList.remove('found');
+    hint.querySelector('.hint-box').textContent = '📷 請將相機對準桌上的蓮花圖';
+    hint.querySelector('.hint-sub').textContent = '觀音將從圖上顯現';
+});
+
+// Actions
+function capturePhoto() {
+    const canvas = document.querySelector('canvas');
+    if (canvas) {
+        canvas.toBlob(blob => {
+            if (blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'AR觀音打卡_' + new Date().toLocaleDateString('zh-TW') + '.png';
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+            showToast('📸 打卡照片已儲存！');
+        });
+    }
+}
+
+function shareExp() {
+    if (navigator.share) {
+        navigator.share({
+            title: 'AR 觀音祈福體驗',
+            text: '我在高雄就服站體驗了 AR 觀音！✨🙏',
+            url: window.location.href
+        }).catch(() => {});
+    } else {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            showToast('🔗 連結已複製到剪貼簿！');
+        });
+    }
+}
+
+function showInfoModal() {
+    document.getElementById('info-modal').classList.add('active');
+}
+function closeInfoModal() {
+    document.getElementById('info-modal').classList.remove('active');
+}
+
+function showToast(msg) {
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2500);
+}
+</script>
+</body>
+</html>
