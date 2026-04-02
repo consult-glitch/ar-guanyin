@@ -68,92 +68,98 @@
 
 <a-marker preset="hiro" id="ar-marker" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
 
-    <!-- LOTUS BASE on marker surface -->
-    <a-cylinder position="0 0.02 0" radius="0.55" height="0.04" color="#D4A574" material="opacity:0.8;transparent:true" segments-radial="24"></a-cylinder>
-    <!-- Lotus petals -->
-    <a-sphere position="0.45 0.06 0" scale="0.18 0.08 0.10" color="#E8C89E" material="opacity:0.7;transparent:true"></a-sphere>
-    <a-sphere position="-0.45 0.06 0" scale="0.18 0.08 0.10" color="#E8C89E" material="opacity:0.7;transparent:true"></a-sphere>
-    <a-sphere position="0 0.06 0.45" scale="0.10 0.08 0.18" color="#E8C89E" material="opacity:0.7;transparent:true"></a-sphere>
-    <a-sphere position="0 0.06 -0.45" scale="0.10 0.08 0.18" color="#E8C89E" material="opacity:0.7;transparent:true"></a-sphere>
-    <a-sphere position="0.32 0.06 0.32" scale="0.14 0.07 0.14" color="#EBCFA8" material="opacity:0.6;transparent:true"></a-sphere>
-    <a-sphere position="-0.32 0.06 0.32" scale="0.14 0.07 0.14" color="#EBCFA8" material="opacity:0.6;transparent:true"></a-sphere>
-    <a-sphere position="0.32 0.06 -0.32" scale="0.14 0.07 0.14" color="#EBCFA8" material="opacity:0.6;transparent:true"></a-sphere>
-    <a-sphere position="-0.32 0.06 -0.32" scale="0.14 0.07 0.14" color="#EBCFA8" material="opacity:0.6;transparent:true"></a-sphere>
-    <a-cylinder position="0 0.08 0" radius="0.38" height="0.03" color="#F0DFC0" material="opacity:0.65;transparent:true" segments-radial="20"></a-cylinder>
+    <!--
+        KEY FIX: In AR.js, the marker surface is the XY plane, and Z points INTO the marker.
+        We build the statue along the Y axis, then rotate the whole thing so Y-up becomes
+        "standing up from the marker surface" as seen by the camera.
+        rotation="-90 0 0" on the wrapper converts Y-up model to stand on the marker.
+    -->
+    <a-entity rotation="-90 0 0" scale="0.8 0.8 0.8">
 
-    <!-- GUANYIN - standing upright along Y axis -->
+        <!-- LOTUS BASE -->
+        <a-cylinder position="0 0.02 0" radius="0.55" height="0.04" color="#D4A574" material="opacity:0.8;transparent:true" segments-radial="24"></a-cylinder>
+        <a-sphere position="0.45 0.06 0" scale="0.18 0.08 0.10" color="#E8C89E" material="opacity:0.7;transparent:true"></a-sphere>
+        <a-sphere position="-0.45 0.06 0" scale="0.18 0.08 0.10" color="#E8C89E" material="opacity:0.7;transparent:true"></a-sphere>
+        <a-sphere position="0 0.06 0.45" scale="0.10 0.08 0.18" color="#E8C89E" material="opacity:0.7;transparent:true"></a-sphere>
+        <a-sphere position="0 0.06 -0.45" scale="0.10 0.08 0.18" color="#E8C89E" material="opacity:0.7;transparent:true"></a-sphere>
+        <a-sphere position="0.32 0.06 0.32" scale="0.14 0.07 0.14" color="#EBCFA8" material="opacity:0.6;transparent:true"></a-sphere>
+        <a-sphere position="-0.32 0.06 0.32" scale="0.14 0.07 0.14" color="#EBCFA8" material="opacity:0.6;transparent:true"></a-sphere>
+        <a-sphere position="0.32 0.06 -0.32" scale="0.14 0.07 0.14" color="#EBCFA8" material="opacity:0.6;transparent:true"></a-sphere>
+        <a-sphere position="-0.32 0.06 -0.32" scale="0.14 0.07 0.14" color="#EBCFA8" material="opacity:0.6;transparent:true"></a-sphere>
+        <a-cylinder position="0 0.08 0" radius="0.38" height="0.03" color="#F0DFC0" material="opacity:0.65;transparent:true" segments-radial="20"></a-cylinder>
 
-    <!-- Lower robe -->
-    <a-cone position="0 0.45 0" radius-bottom="0.40" radius-top="0.18" height="0.70" color="#F5ECD8" material="opacity:0.92;transparent:true;side:double" segments-radial="24"></a-cone>
+        <!-- LOWER ROBE -->
+        <a-cone position="0 0.45 0" radius-bottom="0.40" radius-top="0.18" height="0.70" color="#F5ECD8" material="opacity:0.92;transparent:true;side:double" segments-radial="24"></a-cone>
 
-    <!-- Upper torso -->
-    <a-cone position="0 0.95 0" radius-bottom="0.18" radius-top="0.10" height="0.40" color="#F5ECD8" material="opacity:0.92;transparent:true;side:double" segments-radial="16"></a-cone>
+        <!-- UPPER TORSO -->
+        <a-cone position="0 0.95 0" radius-bottom="0.18" radius-top="0.10" height="0.40" color="#F5ECD8" material="opacity:0.92;transparent:true;side:double" segments-radial="16"></a-cone>
 
-    <!-- Shoulders -->
-    <a-sphere position="0 1.05 0" scale="0.22 0.07 0.13" color="#F5ECD8" material="opacity:0.85;transparent:true"></a-sphere>
+        <!-- SHOULDERS -->
+        <a-sphere position="0 1.05 0" scale="0.22 0.07 0.13" color="#F5ECD8" material="opacity:0.85;transparent:true"></a-sphere>
 
-    <!-- Neck -->
-    <a-cylinder position="0 1.16 0" radius="0.055" height="0.10" color="#F8F0E0" material="opacity:0.9;transparent:true" segments-radial="12"></a-cylinder>
+        <!-- NECK -->
+        <a-cylinder position="0 1.16 0" radius="0.055" height="0.10" color="#F8F0E0" material="opacity:0.9;transparent:true" segments-radial="12"></a-cylinder>
 
-    <!-- Head -->
-    <a-sphere position="0 1.30 0" scale="0.13 0.16 0.13" color="#F8F0E0" material="opacity:0.95;transparent:true"></a-sphere>
+        <!-- HEAD -->
+        <a-sphere position="0 1.30 0" scale="0.13 0.16 0.13" color="#F8F0E0" material="opacity:0.95;transparent:true"></a-sphere>
 
-    <!-- Hair -->
-    <a-sphere position="0 1.40 -0.01" scale="0.12 0.09 0.11" color="#4A3A2A" material="opacity:0.85;transparent:true"></a-sphere>
+        <!-- HAIR -->
+        <a-sphere position="0 1.40 -0.01" scale="0.12 0.09 0.11" color="#4A3A2A" material="opacity:0.85;transparent:true"></a-sphere>
 
-    <!-- Crown -->
-    <a-cone position="0 1.54 0" radius-bottom="0.08" radius-top="0.025" height="0.22" color="#C9A96E" material="opacity:0.9;transparent:true" segments-radial="8"></a-cone>
-    <a-sphere position="0 1.66 0" radius="0.032" color="#FFD54F" material="opacity:0.95;transparent:true;emissive:#FFD54F;emissiveIntensity:0.8"></a-sphere>
+        <!-- CROWN -->
+        <a-cone position="0 1.54 0" radius-bottom="0.08" radius-top="0.025" height="0.22" color="#C9A96E" material="opacity:0.9;transparent:true" segments-radial="8"></a-cone>
+        <a-sphere position="0 1.66 0" radius="0.032" color="#FFD54F" material="opacity:0.95;transparent:true;emissive:#FFD54F;emissiveIntensity:0.8"></a-sphere>
 
-    <!-- Halo -->
-    <a-torus position="0 1.32 -0.10" radius="0.28" radius-tubular="0.012" color="#FFD54F" material="opacity:0.6;transparent:true;emissive:#FFD54F;emissiveIntensity:1.0" segments-radial="40" segments-tubular="12"></a-torus>
-    <a-torus position="0 1.32 -0.12" radius="0.36" radius-tubular="0.008" color="#FFA726" material="opacity:0.3;transparent:true;emissive:#FFA726;emissiveIntensity:0.5" segments-radial="40" segments-tubular="12"></a-torus>
+        <!-- HALO -->
+        <a-torus position="0 1.32 -0.10" radius="0.28" radius-tubular="0.012" color="#FFD54F" material="opacity:0.6;transparent:true;emissive:#FFD54F;emissiveIntensity:1.0" segments-radial="40" segments-tubular="12"></a-torus>
+        <a-torus position="0 1.32 -0.12" radius="0.36" radius-tubular="0.008" color="#FFA726" material="opacity:0.3;transparent:true;emissive:#FFA726;emissiveIntensity:0.5" segments-radial="40" segments-tubular="12"></a-torus>
 
-    <!-- Left arm -->
-    <a-cylinder position="-0.16 0.88 0.04" radius="0.04" height="0.30" rotation="0 0 12" color="#F5ECD8" material="opacity:0.85;transparent:true" segments-radial="10"></a-cylinder>
-    <a-cylinder position="-0.10 0.68 0.10" radius="0.033" height="0.22" rotation="30 0 5" color="#F8F0E0" material="opacity:0.85;transparent:true" segments-radial="10"></a-cylinder>
+        <!-- LEFT ARM -->
+        <a-cylinder position="-0.16 0.88 0.04" radius="0.04" height="0.30" rotation="0 0 12" color="#F5ECD8" material="opacity:0.85;transparent:true" segments-radial="10"></a-cylinder>
+        <a-cylinder position="-0.10 0.68 0.10" radius="0.033" height="0.22" rotation="30 0 5" color="#F8F0E0" material="opacity:0.85;transparent:true" segments-radial="10"></a-cylinder>
 
-    <!-- Right arm -->
-    <a-cylinder position="0.16 0.88 0.04" radius="0.04" height="0.30" rotation="0 0 -12" color="#F5ECD8" material="opacity:0.85;transparent:true" segments-radial="10"></a-cylinder>
-    <a-cylinder position="0.10 0.68 0.10" radius="0.033" height="0.22" rotation="30 0 -5" color="#F8F0E0" material="opacity:0.85;transparent:true" segments-radial="10"></a-cylinder>
+        <!-- RIGHT ARM -->
+        <a-cylinder position="0.16 0.88 0.04" radius="0.04" height="0.30" rotation="0 0 -12" color="#F5ECD8" material="opacity:0.85;transparent:true" segments-radial="10"></a-cylinder>
+        <a-cylinder position="0.10 0.68 0.10" radius="0.033" height="0.22" rotation="30 0 -5" color="#F8F0E0" material="opacity:0.85;transparent:true" segments-radial="10"></a-cylinder>
 
-    <!-- Hands -->
-    <a-sphere position="0 0.56 0.15" radius="0.05" color="#F8F0E0" material="opacity:0.9;transparent:true"></a-sphere>
+        <!-- HANDS -->
+        <a-sphere position="0 0.56 0.15" radius="0.05" color="#F8F0E0" material="opacity:0.9;transparent:true"></a-sphere>
 
-    <!-- Vase 淨瓶 -->
-    <a-cylinder position="0 0.50 0.17" radius="0.028" height="0.09" color="#FFFFFF" material="opacity:0.85;transparent:true"></a-cylinder>
-    <a-sphere position="0 0.46 0.17" radius="0.033" color="#FFFFFF" material="opacity:0.8;transparent:true"></a-sphere>
-    <a-cylinder position="0 0.56 0.17" radius="0.013" height="0.05" color="#FFFFFF" material="opacity:0.8;transparent:true"></a-cylinder>
+        <!-- VASE -->
+        <a-cylinder position="0 0.50 0.17" radius="0.028" height="0.09" color="#FFFFFF" material="opacity:0.85;transparent:true"></a-cylinder>
+        <a-sphere position="0 0.46 0.17" radius="0.033" color="#FFFFFF" material="opacity:0.8;transparent:true"></a-sphere>
+        <a-cylinder position="0 0.56 0.17" radius="0.013" height="0.05" color="#FFFFFF" material="opacity:0.8;transparent:true"></a-cylinder>
 
-    <!-- Willow 楊柳枝 -->
-    <a-cylinder position="0.02 0.62 0.18" radius="0.005" height="0.12" rotation="-15 0 10" color="#7CB342" material="opacity:0.75;transparent:true"></a-cylinder>
-    <a-cylinder position="0.04 0.70 0.19" radius="0.004" height="0.08" rotation="-25 0 20" color="#8BC34A" material="opacity:0.65;transparent:true"></a-cylinder>
-    <a-sphere position="0.06 0.74 0.20" scale="0.025 0.008 0.012" color="#9CCC65" material="opacity:0.6;transparent:true"></a-sphere>
+        <!-- WILLOW -->
+        <a-cylinder position="0.02 0.62 0.18" radius="0.005" height="0.12" rotation="-15 0 10" color="#7CB342" material="opacity:0.75;transparent:true"></a-cylinder>
+        <a-cylinder position="0.04 0.70 0.19" radius="0.004" height="0.08" rotation="-25 0 20" color="#8BC34A" material="opacity:0.65;transparent:true"></a-cylinder>
+        <a-sphere position="0.06 0.74 0.20" scale="0.025 0.008 0.012" color="#9CCC65" material="opacity:0.6;transparent:true"></a-sphere>
 
-    <!-- Scarves 天衣 -->
-    <a-cylinder position="-0.28 0.70 -0.02" radius="0.014" height="0.65" rotation="0 0 6" color="#FFE0B2" material="opacity:0.30;transparent:true"></a-cylinder>
-    <a-cylinder position="0.28 0.70 -0.02" radius="0.014" height="0.65" rotation="0 0 -6" color="#FFE0B2" material="opacity:0.30;transparent:true"></a-cylinder>
+        <!-- SCARVES -->
+        <a-cylinder position="-0.28 0.70 -0.02" radius="0.014" height="0.65" rotation="0 0 6" color="#FFE0B2" material="opacity:0.30;transparent:true"></a-cylinder>
+        <a-cylinder position="0.28 0.70 -0.02" radius="0.014" height="0.65" rotation="0 0 -6" color="#FFE0B2" material="opacity:0.30;transparent:true"></a-cylinder>
 
-    <!-- Necklace 瓔珞 -->
-    <a-torus position="0 1.06 0.04" rotation="90 0 0" radius="0.10" radius-tubular="0.005" color="#C9A96E" material="opacity:0.55;transparent:true" segments-radial="20" segments-tubular="8"></a-torus>
-    <a-sphere position="0 0.96 0.09" radius="0.018" color="#FFD54F" material="opacity:0.8;transparent:true;emissive:#FFD54F;emissiveIntensity:0.4"></a-sphere>
+        <!-- NECKLACE -->
+        <a-torus position="0 1.06 0.04" rotation="90 0 0" radius="0.10" radius-tubular="0.005" color="#C9A96E" material="opacity:0.55;transparent:true" segments-radial="20" segments-tubular="8"></a-torus>
+        <a-sphere position="0 0.96 0.09" radius="0.018" color="#FFD54F" material="opacity:0.8;transparent:true;emissive:#FFD54F;emissiveIntensity:0.4"></a-sphere>
 
-    <!-- LIGHTING -->
-    <a-light type="point" intensity="0.8" distance="5" color="#FFD54F" position="0 2.0 0.8"></a-light>
-    <a-light type="point" intensity="0.4" distance="4" color="#FFFFFF" position="0 1.0 -0.8"></a-light>
-    <a-light type="ambient" intensity="0.6" color="#FFF8E1"></a-light>
+        <!-- LIGHTING -->
+        <a-light type="point" intensity="0.8" distance="5" color="#FFD54F" position="0 2.0 0.8"></a-light>
+        <a-light type="point" intensity="0.4" distance="4" color="#FFFFFF" position="0 1.0 -0.8"></a-light>
+        <a-light type="ambient" intensity="0.6" color="#FFF8E1"></a-light>
 
-    <!-- PARTICLES -->
-    <a-sphere position="0.35 1.0 0.2" radius="0.018" color="#FFD54F" material="opacity:0.7;transparent:true;emissive:#FFD54F;emissiveIntensity:0.6" animation="property:position;to:0.35 1.5 0.2;dur:3000;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
-    <a-sphere position="-0.30 0.7 0.15" radius="0.014" color="#FFA726" material="opacity:0.6;transparent:true;emissive:#FFA726;emissiveIntensity:0.4" animation="property:position;to:-0.30 1.2 0.15;dur:2700;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
-    <a-sphere position="0.20 1.4 -0.10" radius="0.016" color="#FFD54F" material="opacity:0.5;transparent:true;emissive:#FFD54F;emissiveIntensity:0.3" animation="property:position;to:0.20 1.8 -0.10;dur:3200;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
-    <a-sphere position="-0.15 1.6 0.20" radius="0.012" color="#FFE082" material="opacity:0.55;transparent:true;emissive:#FFE082;emissiveIntensity:0.4" animation="property:position;to:-0.15 2.0 0.20;dur:2500;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
-    <a-sphere position="0.40 0.5 0.10" radius="0.013" color="#FFB74D" material="opacity:0.45;transparent:true;emissive:#FFB74D;emissiveIntensity:0.3" animation="property:position;to:0.40 1.0 0.10;dur:3500;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
+        <!-- PARTICLES -->
+        <a-sphere position="0.35 1.0 0.2" radius="0.018" color="#FFD54F" material="opacity:0.7;transparent:true;emissive:#FFD54F;emissiveIntensity:0.6" animation="property:position;to:0.35 1.5 0.2;dur:3000;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
+        <a-sphere position="-0.30 0.7 0.15" radius="0.014" color="#FFA726" material="opacity:0.6;transparent:true;emissive:#FFA726;emissiveIntensity:0.4" animation="property:position;to:-0.30 1.2 0.15;dur:2700;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
+        <a-sphere position="0.20 1.4 -0.10" radius="0.016" color="#FFD54F" material="opacity:0.5;transparent:true;emissive:#FFD54F;emissiveIntensity:0.3" animation="property:position;to:0.20 1.8 -0.10;dur:3200;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
+        <a-sphere position="-0.15 1.6 0.20" radius="0.012" color="#FFE082" material="opacity:0.55;transparent:true;emissive:#FFE082;emissiveIntensity:0.4" animation="property:position;to:-0.15 2.0 0.20;dur:2500;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
 
-    <!-- Rotating glow ring -->
-    <a-torus position="0 0.06 0" rotation="90 0 0" radius="0.58" radius-tubular="0.004" color="#FFD54F" material="opacity:0.25;transparent:true;emissive:#FFD54F;emissiveIntensity:0.3" animation="property:rotation;to:90 360 0;dur:10000;easing:linear;loop:true"></a-torus>
+        <!-- ROTATING RING -->
+        <a-torus position="0 0.06 0" rotation="90 0 0" radius="0.58" radius-tubular="0.004" color="#FFD54F" material="opacity:0.25;transparent:true;emissive:#FFD54F;emissiveIntensity:0.3" animation="property:rotation;to:90 360 0;dur:10000;easing:linear;loop:true"></a-torus>
 
+    </a-entity>
 </a-marker>
+
 <a-entity camera></a-entity>
 </a-scene>
 
