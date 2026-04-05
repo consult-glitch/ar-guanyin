@@ -3,42 +3,112 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>AR 觀音體驗</title>
+    <title>AR 觀音互動體驗</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
-        *{margin:0;padding:0}body{overflow:hidden;font-family:-apple-system,sans-serif}
+        *{margin:0;padding:0}body{overflow:hidden;font-family:-apple-system,"Microsoft JhengHei",sans-serif}
+
         #loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:linear-gradient(135deg,#1a0a2e,#16213e);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;transition:opacity .6s}
         #loading-overlay.hidden{opacity:0;pointer-events:none}
         #loading-overlay h2{font-size:20px;background:linear-gradient(135deg,#FFD54F,#FF8A65);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
         #loading-overlay p{font-size:13px;color:rgba(255,255,255,.5)}
         .loader{width:40px;height:40px;border:3px solid rgba(255,255,255,.2);border-top-color:#FFD54F;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:20px}
         @keyframes spin{to{transform:rotate(360deg)}}
+
         #hud-top{position:fixed;top:0;left:0;right:0;z-index:100;padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top));display:flex;justify-content:space-between;align-items:center;background:linear-gradient(to bottom,rgba(0,0,0,.5),transparent)}
         .hud-badge{padding:6px 14px;background:rgba(0,0,0,.5);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.15);border-radius:20px;font-size:12px;color:#fff}
         .hud-badge.gold{border-color:rgba(255,200,60,.3);color:#FFD54F}
         .hud-badge.green{border-color:rgba(76,175,80,.4);color:#81C784}
-        #scan-hint{position:fixed;bottom:120px;left:50%;transform:translateX(-50%);z-index:100;text-align:center;animation:hintBounce 2s ease-in-out infinite;transition:opacity .5s}
+
+        #scan-hint{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:100;text-align:center;animation:hintBounce 2s ease-in-out infinite;transition:opacity .5s}
         @keyframes hintBounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
         .hint-box{padding:12px 24px;background:rgba(0,0,0,.6);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.15);border-radius:16px;font-size:14px;color:#fff}
         .hint-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:4px}
-        #bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:100;padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom));display:flex;justify-content:center;gap:12px;background:linear-gradient(to top,rgba(0,0,0,.5),transparent)}
-        .action-btn{padding:12px 20px;border:none;border-radius:25px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px}
-        .action-btn.primary{background:linear-gradient(135deg,#FFB74D,#FF8A65);color:#1a0a2e}
-        .action-btn.secondary{background:rgba(255,255,255,.12);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.2);color:#fff}
+
+        /* ========== DIALOG ========== */
+        #dialog-overlay{
+            display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:2000;
+            background:rgba(0,0,0,.5);backdrop-filter:blur(4px);
+            align-items:flex-end;justify-content:center;padding:20px;
+        }
+        #dialog-overlay.active{display:flex}
+
+        .dialog-box{
+            width:100%;max-width:400px;
+            background:linear-gradient(135deg,#1e1040,#1a1a3e);
+            border:1px solid rgba(255,255,255,.12);
+            border-radius:24px 24px 12px 12px;
+            padding:0;overflow:hidden;
+            animation:slideUp .4s ease;
+            margin-bottom:env(safe-area-inset-bottom);
+        }
+        @keyframes slideUp{from{transform:translateY(100px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+        .dialog-header{
+            display:flex;align-items:center;gap:12px;
+            padding:16px 20px;
+            background:rgba(255,215,80,.08);
+            border-bottom:1px solid rgba(255,255,255,.06);
+        }
+        .dialog-avatar{
+            width:44px;height:44px;border-radius:50%;
+            background:linear-gradient(135deg,#FFD54F,#FF8A65);
+            display:flex;align-items:center;justify-content:center;
+            font-size:22px;
+        }
+        .dialog-name{font-size:16px;font-weight:600;color:#FFD54F}
+        .dialog-title{font-size:11px;color:rgba(255,255,255,.4)}
+
+        .dialog-body{padding:16px 20px}
+        .dialog-text{
+            font-size:14px;color:rgba(255,255,255,.85);
+            line-height:1.7;margin-bottom:16px;
+            padding:12px 16px;
+            background:rgba(255,255,255,.04);
+            border-radius:12px;
+            border-left:3px solid rgba(255,215,80,.3);
+        }
+
+        .dialog-options{display:flex;flex-direction:column;gap:8px}
+        .dialog-btn{
+            padding:12px 16px;
+            background:rgba(255,255,255,.06);
+            border:1px solid rgba(255,255,255,.1);
+            border-radius:12px;
+            color:#fff;font-size:13px;
+            text-align:left;cursor:pointer;
+            transition:all .2s;
+            display:flex;align-items:center;gap:10px;
+        }
+        .dialog-btn:hover,.dialog-btn:active{background:rgba(255,215,80,.12);border-color:rgba(255,215,80,.3)}
+        .dialog-btn .icon{font-size:18px;width:28px;text-align:center}
+        .dialog-btn .label{flex:1}
+
+        .dialog-close{
+            display:block;width:100%;padding:14px;
+            background:transparent;border:none;border-top:1px solid rgba(255,255,255,.06);
+            color:rgba(255,255,255,.4);font-size:13px;cursor:pointer;
+        }
+        .dialog-close:active{background:rgba(255,255,255,.03)}
+
+        /* Sub-dialog content */
+        .sub-content{display:none;padding:0 20px 16px}
+        .sub-content.active{display:block}
+        .sub-text{font-size:13px;color:rgba(255,255,255,.75);line-height:1.8;margin-bottom:12px}
+        .sub-back{
+            padding:8px 16px;background:rgba(255,215,80,.1);
+            border:1px solid rgba(255,215,80,.2);border-radius:20px;
+            color:#FFD54F;font-size:12px;cursor:pointer;
+        }
+
         .toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:9999;padding:12px 24px;background:rgba(0,0,0,.8);backdrop-filter:blur(12px);border:1px solid rgba(255,200,60,.3);color:#FFD54F;border-radius:25px;font-size:13px;animation:toastAnim 2.5s ease forwards}
         @keyframes toastAnim{0%{opacity:0;transform:translateX(-50%) translateY(-10px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0}}
-        #info-modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:5000;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px}
-        #info-modal.active{display:flex}
-        .modal-card{background:linear-gradient(135deg,#1e1040,#1a1a3e);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:28px;max-width:340px;width:100%}
-        .modal-card h3{font-size:18px;color:#FFD54F;margin-bottom:12px}
-        .modal-card p{font-size:13px;color:rgba(255,255,255,.7);line-height:1.7;margin-bottom:16px}
-        .modal-close{padding:10px 24px;background:linear-gradient(135deg,#FFB74D,#FF8A65);color:#1a0a2e;border:none;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer}
     </style>
 </head>
 <body>
 
-<div id="loading-overlay"><div class="loader"></div><h2>AR 觀音體驗</h2><p>正在啟動相機...</p></div>
+<div id="loading-overlay"><div class="loader"></div><h2>AR 觀音互動體驗</h2><p>正在啟動相機...</p></div>
 
 <div id="hud-top">
     <span class="hud-badge">高雄就服站</span>
@@ -50,113 +120,169 @@
     <div class="hint-sub">觀音將從圖上顯現</div>
 </div>
 
-<div id="bottom-bar">
-    <button class="action-btn secondary" onclick="capturePhoto()">打卡</button>
-    <button class="action-btn primary" onclick="showInfoModal()">就業資訊</button>
-    <button class="action-btn secondary" onclick="shareExp()">分享</button>
-</div>
+<!-- ========== DIALOG BOX ========== -->
+<div id="dialog-overlay">
+    <div class="dialog-box">
+        <div class="dialog-header">
+            <div class="dialog-avatar">&#x89C0;</div>
+            <div>
+                <div class="dialog-name">觀音菩薩</div>
+                <div class="dialog-title">高雄就服站守護者</div>
+            </div>
+        </div>
 
-<div id="info-modal">
-    <div class="modal-card">
-        <h3>就業服務資訊</h3>
-        <p>歡迎來到高雄市訓練就業中心！<br><br>我們提供：<br>✦ 職業訓練課程<br>✦ 就業媒合服務<br>✦ 創業輔導諮詢<br>✦ 職涯探索工具<br><br>掃描現場其他 AR 標記，解鎖更多就業資訊！</p>
-        <button class="modal-close" onclick="closeInfoModal()">了解！繼續體驗</button>
+        <!-- Main menu -->
+        <div class="dialog-body" id="dialog-main">
+            <div class="dialog-text" id="dialog-message">
+                施主好，我是觀音菩薩。今天想了解什麼呢？
+            </div>
+            <div class="dialog-options">
+                <button class="dialog-btn" onclick="showSub('jobs')">
+                    <span class="icon">&#x1F4BC;</span>
+                    <span class="label">最近有什麼好工作？</span>
+                </button>
+                <button class="dialog-btn" onclick="showSub('training')">
+                    <span class="icon">&#x1F393;</span>
+                    <span class="label">我想學一技之長</span>
+                </button>
+                <button class="dialog-btn" onclick="showSub('consult')">
+                    <span class="icon">&#x1F4AC;</span>
+                    <span class="label">職涯迷惘，想找人聊聊</span>
+                </button>
+                <button class="dialog-btn" onclick="showSub('fortune')">
+                    <span class="icon">&#x2728;</span>
+                    <span class="label">求一個職場籤詩</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Sub: Jobs -->
+        <div class="sub-content" id="sub-jobs">
+            <div class="sub-text">
+                目前高雄地區熱門職缺包括：<br><br>
+                &#x2022; 半導體產業技術員（楠梓科技園區）<br>
+                &#x2022; 照護服務員（長照機構，免經驗可培訓）<br>
+                &#x2022; 電商營運助理（前鎮區）<br>
+                &#x2022; CNC 機台操作員（大寮區）<br><br>
+                到現場的就業服務櫃檯，就服員會為你媒合最適合的職缺喔！
+            </div>
+            <button class="sub-back" onclick="backToMain()">&#x2190; 還想問其他的</button>
+        </div>
+
+        <!-- Sub: Training -->
+        <div class="sub-content" id="sub-training">
+            <div class="sub-text">
+                訓練就業中心提供免費職業訓練：<br><br>
+                &#x2022; 程式設計與網頁開發班（3個月）<br>
+                &#x2022; 烘焙丙級證照班（2個月）<br>
+                &#x2022; 照護服務員培訓班（1個月）<br>
+                &#x2022; 電商直播行銷班（2個月）<br><br>
+                符合資格者還有訓練津貼可以領，詳情洽現場服務人員！
+            </div>
+            <button class="sub-back" onclick="backToMain()">&#x2190; 還想問其他的</button>
+        </div>
+
+        <!-- Sub: Consult -->
+        <div class="sub-content" id="sub-consult">
+            <div class="sub-text">
+                迷惘是正常的，每個人都會經歷。<br><br>
+                就服站提供免費的一對一職涯諮詢服務，由專業的職涯諮詢師幫你：<br><br>
+                &#x2022; 釐清自己的興趣與優勢<br>
+                &#x2022; 探索適合的職業方向<br>
+                &#x2022; 撰寫履歷與面試技巧指導<br><br>
+                可以直接到現場櫃檯預約，也可以撥打就服專線！
+            </div>
+            <button class="sub-back" onclick="backToMain()">&#x2190; 還想問其他的</button>
+        </div>
+
+        <!-- Sub: Fortune -->
+        <div class="sub-content" id="sub-fortune">
+            <div class="sub-text" id="fortune-text">
+                正在為你求籤...
+            </div>
+            <button class="dialog-btn" onclick="drawFortune()" style="margin-bottom:12px">
+                <span class="icon">&#x1F3B2;</span>
+                <span class="label">再求一籤</span>
+            </button>
+            <button class="sub-back" onclick="backToMain()">&#x2190; 還想問其他的</button>
+        </div>
+
+        <button class="dialog-close" onclick="closeDialog()">收起對話</button>
     </div>
 </div>
 
-<a-scene embedded arjs="sourceType:webcam; debugUIEnabled:false;" renderer="logarithmicDepthBuffer:true; antialias:true; alpha:true;" vr-mode-ui="enabled:false" id="ar-scene">
+<!-- ========== AR SCENE ========== -->
+<a-scene embedded arjs="sourceType:webcam; debugUIEnabled:false;" renderer="logarithmicDepthBuffer:true; antialias:true; alpha:true;" vr-mode-ui="enabled:false" id="ar-scene"
+    cursor="rayOrigin: mouse; fuse: false;"
+    raycaster="objects: .clickable"
+>
 
 <a-marker preset="hiro" id="ar-marker" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
 
-    <!--
-        KEY FIX: In AR.js, the marker surface is the XY plane, and Z points INTO the marker.
-        We build the statue along the Y axis, then rotate the whole thing so Y-up becomes
-        "standing up from the marker surface" as seen by the camera.
-        rotation="-90 0 0" on the wrapper converts Y-up model to stand on the marker.
-    -->
     <a-entity rotation="-90 0 0" scale="0.8 0.8 0.8">
 
-        <!-- LOTUS BASE -->
+        <!-- Lotus base -->
         <a-cylinder position="0 0.02 0" radius="0.55" height="0.04" color="#D4A574" material="opacity:0.8;transparent:true" segments-radial="24"></a-cylinder>
         <a-sphere position="0.45 0.06 0" scale="0.18 0.08 0.10" color="#E8C89E" material="opacity:0.7;transparent:true"></a-sphere>
         <a-sphere position="-0.45 0.06 0" scale="0.18 0.08 0.10" color="#E8C89E" material="opacity:0.7;transparent:true"></a-sphere>
         <a-sphere position="0 0.06 0.45" scale="0.10 0.08 0.18" color="#E8C89E" material="opacity:0.7;transparent:true"></a-sphere>
         <a-sphere position="0 0.06 -0.45" scale="0.10 0.08 0.18" color="#E8C89E" material="opacity:0.7;transparent:true"></a-sphere>
-        <a-sphere position="0.32 0.06 0.32" scale="0.14 0.07 0.14" color="#EBCFA8" material="opacity:0.6;transparent:true"></a-sphere>
-        <a-sphere position="-0.32 0.06 0.32" scale="0.14 0.07 0.14" color="#EBCFA8" material="opacity:0.6;transparent:true"></a-sphere>
-        <a-sphere position="0.32 0.06 -0.32" scale="0.14 0.07 0.14" color="#EBCFA8" material="opacity:0.6;transparent:true"></a-sphere>
-        <a-sphere position="-0.32 0.06 -0.32" scale="0.14 0.07 0.14" color="#EBCFA8" material="opacity:0.6;transparent:true"></a-sphere>
         <a-cylinder position="0 0.08 0" radius="0.38" height="0.03" color="#F0DFC0" material="opacity:0.65;transparent:true" segments-radial="20"></a-cylinder>
 
-        <!-- LOWER ROBE -->
+        <!-- CLICKABLE GUANYIN BODY (wrapped in clickable entity) -->
+        <a-entity id="guanyin-clickable" class="clickable"
+            geometry="primitive:cylinder; radius:0.35; height:1.8"
+            position="0 0.95 0"
+            material="opacity:0; transparent:true"
+        ></a-entity>
+
+        <!-- Lower robe -->
         <a-cone position="0 0.45 0" radius-bottom="0.40" radius-top="0.18" height="0.70" color="#F5ECD8" material="opacity:0.92;transparent:true;side:double" segments-radial="24"></a-cone>
-
-        <!-- UPPER TORSO -->
+        <!-- Upper torso -->
         <a-cone position="0 0.95 0" radius-bottom="0.18" radius-top="0.10" height="0.40" color="#F5ECD8" material="opacity:0.92;transparent:true;side:double" segments-radial="16"></a-cone>
-
-        <!-- SHOULDERS -->
+        <!-- Shoulders -->
         <a-sphere position="0 1.05 0" scale="0.22 0.07 0.13" color="#F5ECD8" material="opacity:0.85;transparent:true"></a-sphere>
-
-        <!-- NECK -->
+        <!-- Neck -->
         <a-cylinder position="0 1.16 0" radius="0.055" height="0.10" color="#F8F0E0" material="opacity:0.9;transparent:true" segments-radial="12"></a-cylinder>
-
-        <!-- HEAD -->
+        <!-- Head -->
         <a-sphere position="0 1.30 0" scale="0.13 0.16 0.13" color="#F8F0E0" material="opacity:0.95;transparent:true"></a-sphere>
-
-        <!-- HAIR -->
+        <!-- Hair -->
         <a-sphere position="0 1.40 -0.01" scale="0.12 0.09 0.11" color="#4A3A2A" material="opacity:0.85;transparent:true"></a-sphere>
-
-        <!-- CROWN -->
+        <!-- Crown -->
         <a-cone position="0 1.54 0" radius-bottom="0.08" radius-top="0.025" height="0.22" color="#C9A96E" material="opacity:0.9;transparent:true" segments-radial="8"></a-cone>
         <a-sphere position="0 1.66 0" radius="0.032" color="#FFD54F" material="opacity:0.95;transparent:true;emissive:#FFD54F;emissiveIntensity:0.8"></a-sphere>
 
-        <!-- HALO -->
+        <!-- Halo -->
         <a-torus position="0 1.32 -0.10" radius="0.28" radius-tubular="0.012" color="#FFD54F" material="opacity:0.6;transparent:true;emissive:#FFD54F;emissiveIntensity:1.0" segments-radial="40" segments-tubular="12"></a-torus>
-        <a-torus position="0 1.32 -0.12" radius="0.36" radius-tubular="0.008" color="#FFA726" material="opacity:0.3;transparent:true;emissive:#FFA726;emissiveIntensity:0.5" segments-radial="40" segments-tubular="12"></a-torus>
 
-        <!-- LEFT ARM -->
-        <a-cylinder position="-0.16 0.88 0.04" radius="0.04" height="0.30" rotation="0 0 12" color="#F5ECD8" material="opacity:0.85;transparent:true" segments-radial="10"></a-cylinder>
-        <a-cylinder position="-0.10 0.68 0.10" radius="0.033" height="0.22" rotation="30 0 5" color="#F8F0E0" material="opacity:0.85;transparent:true" segments-radial="10"></a-cylinder>
-
-        <!-- RIGHT ARM -->
-        <a-cylinder position="0.16 0.88 0.04" radius="0.04" height="0.30" rotation="0 0 -12" color="#F5ECD8" material="opacity:0.85;transparent:true" segments-radial="10"></a-cylinder>
-        <a-cylinder position="0.10 0.68 0.10" radius="0.033" height="0.22" rotation="30 0 -5" color="#F8F0E0" material="opacity:0.85;transparent:true" segments-radial="10"></a-cylinder>
-
-        <!-- HANDS -->
+        <!-- Arms -->
+        <a-cylinder position="-0.16 0.88 0.04" radius="0.04" height="0.30" rotation="0 0 12" color="#F5ECD8" material="opacity:0.85;transparent:true"></a-cylinder>
+        <a-cylinder position="0.16 0.88 0.04" radius="0.04" height="0.30" rotation="0 0 -12" color="#F5ECD8" material="opacity:0.85;transparent:true"></a-cylinder>
+        <!-- Hands -->
         <a-sphere position="0 0.56 0.15" radius="0.05" color="#F8F0E0" material="opacity:0.9;transparent:true"></a-sphere>
 
-        <!-- VASE -->
+        <!-- Vase -->
         <a-cylinder position="0 0.50 0.17" radius="0.028" height="0.09" color="#FFFFFF" material="opacity:0.85;transparent:true"></a-cylinder>
         <a-sphere position="0 0.46 0.17" radius="0.033" color="#FFFFFF" material="opacity:0.8;transparent:true"></a-sphere>
-        <a-cylinder position="0 0.56 0.17" radius="0.013" height="0.05" color="#FFFFFF" material="opacity:0.8;transparent:true"></a-cylinder>
 
-        <!-- WILLOW -->
-        <a-cylinder position="0.02 0.62 0.18" radius="0.005" height="0.12" rotation="-15 0 10" color="#7CB342" material="opacity:0.75;transparent:true"></a-cylinder>
-        <a-cylinder position="0.04 0.70 0.19" radius="0.004" height="0.08" rotation="-25 0 20" color="#8BC34A" material="opacity:0.65;transparent:true"></a-cylinder>
-        <a-sphere position="0.06 0.74 0.20" scale="0.025 0.008 0.012" color="#9CCC65" material="opacity:0.6;transparent:true"></a-sphere>
-
-        <!-- SCARVES -->
+        <!-- Scarves -->
         <a-cylinder position="-0.28 0.70 -0.02" radius="0.014" height="0.65" rotation="0 0 6" color="#FFE0B2" material="opacity:0.30;transparent:true"></a-cylinder>
         <a-cylinder position="0.28 0.70 -0.02" radius="0.014" height="0.65" rotation="0 0 -6" color="#FFE0B2" material="opacity:0.30;transparent:true"></a-cylinder>
 
-        <!-- NECKLACE -->
+        <!-- Necklace -->
         <a-torus position="0 1.06 0.04" rotation="90 0 0" radius="0.10" radius-tubular="0.005" color="#C9A96E" material="opacity:0.55;transparent:true" segments-radial="20" segments-tubular="8"></a-torus>
-        <a-sphere position="0 0.96 0.09" radius="0.018" color="#FFD54F" material="opacity:0.8;transparent:true;emissive:#FFD54F;emissiveIntensity:0.4"></a-sphere>
 
-        <!-- LIGHTING -->
+        <!-- Lighting -->
         <a-light type="point" intensity="0.8" distance="5" color="#FFD54F" position="0 2.0 0.8"></a-light>
-        <a-light type="point" intensity="0.4" distance="4" color="#FFFFFF" position="0 1.0 -0.8"></a-light>
         <a-light type="ambient" intensity="0.6" color="#FFF8E1"></a-light>
 
-        <!-- PARTICLES -->
+        <!-- Particles -->
         <a-sphere position="0.35 1.0 0.2" radius="0.018" color="#FFD54F" material="opacity:0.7;transparent:true;emissive:#FFD54F;emissiveIntensity:0.6" animation="property:position;to:0.35 1.5 0.2;dur:3000;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
         <a-sphere position="-0.30 0.7 0.15" radius="0.014" color="#FFA726" material="opacity:0.6;transparent:true;emissive:#FFA726;emissiveIntensity:0.4" animation="property:position;to:-0.30 1.2 0.15;dur:2700;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
         <a-sphere position="0.20 1.4 -0.10" radius="0.016" color="#FFD54F" material="opacity:0.5;transparent:true;emissive:#FFD54F;emissiveIntensity:0.3" animation="property:position;to:0.20 1.8 -0.10;dur:3200;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
-        <a-sphere position="-0.15 1.6 0.20" radius="0.012" color="#FFE082" material="opacity:0.55;transparent:true;emissive:#FFE082;emissiveIntensity:0.4" animation="property:position;to:-0.15 2.0 0.20;dur:2500;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
 
-        <!-- ROTATING RING -->
+        <!-- Rotating ring -->
         <a-torus position="0 0.06 0" rotation="90 0 0" radius="0.58" radius-tubular="0.004" color="#FFD54F" material="opacity:0.25;transparent:true;emissive:#FFD54F;emissiveIntensity:0.3" animation="property:rotation;to:90 360 0;dur:10000;easing:linear;loop:true"></a-torus>
-
     </a-entity>
 </a-marker>
 
@@ -164,17 +290,122 @@
 </a-scene>
 
 <script>
-const scene=document.getElementById('ar-scene');
-scene.addEventListener('loaded',()=>{setTimeout(()=>{document.getElementById('loading-overlay').classList.add('hidden')},1500)});
-setTimeout(()=>{document.getElementById('loading-overlay').classList.add('hidden')},5000);
-const marker=document.getElementById('ar-marker');
-marker.addEventListener('markerFound',()=>{const b=document.getElementById('status-badge');b.textContent='觀音顯現';b.classList.remove('gold');b.classList.add('green');const h=document.getElementById('scan-hint');h.querySelector('.hint-box').textContent='觀音菩薩已顯現';h.querySelector('.hint-sub').textContent='移動手機改變觀看角度';setTimeout(()=>{h.style.opacity='0'},3000)});
-marker.addEventListener('markerLost',()=>{const b=document.getElementById('status-badge');b.textContent='搜尋中';b.classList.remove('green');b.classList.add('gold');const h=document.getElementById('scan-hint');h.style.opacity='1';h.querySelector('.hint-box').textContent='請將相機對準 Hiro 標記圖';h.querySelector('.hint-sub').textContent='觀音將從圖上顯現'});
-function capturePhoto(){const c=document.querySelector('canvas');if(c){c.toBlob(b=>{if(b){const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='AR觀音打卡.png';a.click();URL.revokeObjectURL(u)}showToast('打卡照片已儲存！')})}}
-function shareExp(){if(navigator.share){navigator.share({title:'AR 觀音祈福體驗',text:'我在高雄就服站體驗了 AR 觀音！',url:location.href}).catch(()=>{})}else{navigator.clipboard.writeText(location.href).then(()=>showToast('連結已複製！'))}}
-function showInfoModal(){document.getElementById('info-modal').classList.add('active')}
-function closeInfoModal(){document.getElementById('info-modal').classList.remove('active')}
-function showToast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500)}
+// Loading
+const scene = document.getElementById('ar-scene');
+scene.addEventListener('loaded', () => { setTimeout(() => { document.getElementById('loading-overlay').classList.add('hidden'); }, 1500); });
+setTimeout(() => { document.getElementById('loading-overlay').classList.add('hidden'); }, 5000);
+
+// Marker events
+const marker = document.getElementById('ar-marker');
+let markerVisible = false;
+
+marker.addEventListener('markerFound', () => {
+    markerVisible = true;
+    const b = document.getElementById('status-badge');
+    b.textContent = '觀音顯現'; b.classList.remove('gold'); b.classList.add('green');
+    const h = document.getElementById('scan-hint');
+    h.querySelector('.hint-box').textContent = '點按觀音開始對話';
+    h.querySelector('.hint-sub').textContent = '輕觸螢幕上的觀音像';
+});
+
+marker.addEventListener('markerLost', () => {
+    markerVisible = false;
+    const b = document.getElementById('status-badge');
+    b.textContent = '搜尋中'; b.classList.remove('green'); b.classList.add('gold');
+    const h = document.getElementById('scan-hint');
+    h.style.opacity = '1';
+    h.querySelector('.hint-box').textContent = '請將相機對準 Hiro 標記圖';
+    h.querySelector('.hint-sub').textContent = '觀音將從圖上顯現';
+});
+
+// Click on Guanyin to open dialog
+const clickTarget = document.getElementById('guanyin-clickable');
+clickTarget.addEventListener('click', () => {
+    if (markerVisible) {
+        openDialog();
+    }
+});
+
+// Also handle touch on the whole scene as fallback
+// (AR.js raycasting can be finicky on mobile)
+let touchHandled = false;
+document.addEventListener('touchstart', (e) => {
+    if (markerVisible && !document.getElementById('dialog-overlay').classList.contains('active')) {
+        // Only trigger if touch is in the center area of screen (roughly where Guanyin would be)
+        const x = e.touches[0].clientX / window.innerWidth;
+        const y = e.touches[0].clientY / window.innerHeight;
+        if (x > 0.2 && x < 0.8 && y > 0.15 && y < 0.75) {
+            if (!touchHandled) {
+                touchHandled = true;
+                setTimeout(() => { touchHandled = false; }, 500);
+                openDialog();
+            }
+        }
+    }
+});
+
+// Dialog logic
+const greetings = [
+    "施主好，我是觀音菩薩。今天想了解什麼呢？",
+    "阿彌陀佛，有緣人。讓我指引你前方的道路。",
+    "歡迎來到就服站，我在這裡等你很久了。想問什麼？",
+    "施主面帶英氣，看來正在尋找新的方向。讓我幫你。",
+];
+
+const fortunes = [
+    { sign: "上上籤", poem: "雲開見月明，\n貴人自然來。\n莫急且耐心，\n好缺在前方。", advice: "近期會有貴人引薦好機會，保持積極心態！" },
+    { sign: "上籤", poem: "春風化雨時，\n百花齊盛開。\n進修添技能，\n前途自然寬。", advice: "建議參加職業訓練課程，提升技能就是最好的投資。" },
+    { sign: "中籤", poem: "行路雖漫漫，\n步步皆向前。\n回首看來時，\n已過萬重山。", advice: "目前方向正確，持續努力就好。可以來就服站做職涯諮詢。" },
+    { sign: "中上籤", poem: "轉角遇知音，\n握手共前行。\n團隊力量大，\n獨行不如群。", advice: "適合往團隊合作型的工作發展，面試時展現溝通能力！" },
+    { sign: "上上籤", poem: "金鱗豈是池中物，\n一遇風雲便化龍。", advice: "你的才華即將被看見！趕快更新履歷，機會就在眼前。" },
+];
+
+function openDialog() {
+    const msg = greetings[Math.floor(Math.random() * greetings.length)];
+    document.getElementById('dialog-message').textContent = msg;
+    document.getElementById('dialog-main').style.display = 'block';
+    document.querySelectorAll('.sub-content').forEach(el => el.classList.remove('active'));
+    document.getElementById('dialog-overlay').classList.add('active');
+    document.getElementById('scan-hint').style.opacity = '0';
+}
+
+function closeDialog() {
+    document.getElementById('dialog-overlay').classList.remove('active');
+    if (markerVisible) {
+        const h = document.getElementById('scan-hint');
+        h.style.opacity = '1';
+        h.querySelector('.hint-box').textContent = '再次點按觀音繼續對話';
+        h.querySelector('.hint-sub').textContent = '';
+    }
+}
+
+function showSub(id) {
+    document.getElementById('dialog-main').style.display = 'none';
+    document.querySelectorAll('.sub-content').forEach(el => el.classList.remove('active'));
+    const sub = document.getElementById('sub-' + id);
+    sub.classList.add('active');
+    if (id === 'fortune') drawFortune();
+}
+
+function backToMain() {
+    document.querySelectorAll('.sub-content').forEach(el => el.classList.remove('active'));
+    document.getElementById('dialog-main').style.display = 'block';
+}
+
+function drawFortune() {
+    const f = fortunes[Math.floor(Math.random() * fortunes.length)];
+    document.getElementById('fortune-text').innerHTML =
+        '<div style="text-align:center;margin-bottom:12px;">' +
+        '<span style="font-size:20px;color:#FFD54F;font-weight:700;">' + f.sign + '</span></div>' +
+        '<div style="text-align:center;font-size:16px;color:rgba(255,255,255,.9);line-height:2;margin-bottom:12px;font-style:italic;white-space:pre-line;">' + f.poem + '</div>' +
+        '<div style="font-size:13px;color:rgba(255,255,255,.6);padding:10px 14px;background:rgba(255,215,80,.06);border-radius:8px;">' +
+        '&#x1F4A1; 菩薩解籤：' + f.advice + '</div>';
+}
+
+function showToast(msg) {
+    const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+    document.body.appendChild(t); setTimeout(() => t.remove(), 2500);
+}
 </script>
 </body>
 </html>
