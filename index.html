@@ -8,102 +8,69 @@
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
         *{margin:0;padding:0}body{overflow:hidden;font-family:-apple-system,"Microsoft JhengHei",sans-serif}
-
         #loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:linear-gradient(135deg,#1a0a2e,#16213e);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;transition:opacity .6s}
         #loading-overlay.hidden{opacity:0;pointer-events:none}
         #loading-overlay h2{font-size:20px;background:linear-gradient(135deg,#FFD54F,#FF8A65);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
         #loading-overlay p{font-size:13px;color:rgba(255,255,255,.5)}
         .loader{width:40px;height:40px;border:3px solid rgba(255,255,255,.2);border-top-color:#FFD54F;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:20px}
         @keyframes spin{to{transform:rotate(360deg)}}
-
         #hud-top{position:fixed;top:0;left:0;right:0;z-index:100;padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top));display:flex;justify-content:space-between;align-items:center;background:linear-gradient(to bottom,rgba(0,0,0,.5),transparent)}
         .hud-badge{padding:6px 14px;background:rgba(0,0,0,.5);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.15);border-radius:20px;font-size:12px;color:#fff}
         .hud-badge.gold{border-color:rgba(255,200,60,.3);color:#FFD54F}
         .hud-badge.green{border-color:rgba(76,175,80,.4);color:#81C784}
-
-        #scan-hint{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:100;text-align:center;animation:hintBounce 2s ease-in-out infinite;transition:opacity .5s}
+        #scan-hint{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);z-index:100;text-align:center;animation:hintBounce 2s ease-in-out infinite;transition:opacity .5s}
         @keyframes hintBounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
         .hint-box{padding:12px 24px;background:rgba(0,0,0,.6);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.15);border-radius:16px;font-size:14px;color:#fff}
         .hint-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:4px}
 
-        /* ========== DIALOG ========== */
-        #dialog-overlay{
-            display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:2000;
-            background:rgba(0,0,0,.5);backdrop-filter:blur(4px);
-            align-items:flex-end;justify-content:center;padding:20px;
-        }
+        /* Bottom bar */
+        #bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:150;padding:12px 16px;padding-bottom:max(12px,env(safe-area-inset-bottom));display:flex;justify-content:center;gap:10px;background:linear-gradient(to top,rgba(0,0,0,.6),transparent)}
+        .bar-btn{padding:10px 18px;border:none;border-radius:25px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s}
+        .bar-btn.primary{background:linear-gradient(135deg,#FFB74D,#FF8A65);color:#1a0a2e}
+        .bar-btn.secondary{background:rgba(255,255,255,.12);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.2);color:#fff}
+        .bar-btn:active{transform:scale(.95)}
+
+        /* Dialog */
+        #dialog-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:2000;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;padding:20px}
         #dialog-overlay.active{display:flex}
-
-        .dialog-box{
-            width:100%;max-width:400px;
-            background:linear-gradient(135deg,#1e1040,#1a1a3e);
-            border:1px solid rgba(255,255,255,.12);
-            border-radius:24px 24px 12px 12px;
-            padding:0;overflow:hidden;
-            animation:slideUp .4s ease;
-            margin-bottom:env(safe-area-inset-bottom);
-        }
+        .dialog-box{width:100%;max-width:400px;background:linear-gradient(135deg,#1e1040,#1a1a3e);border:1px solid rgba(255,255,255,.12);border-radius:24px 24px 12px 12px;overflow:hidden;animation:slideUp .4s ease;margin-bottom:env(safe-area-inset-bottom)}
         @keyframes slideUp{from{transform:translateY(100px);opacity:0}to{transform:translateY(0);opacity:1}}
-
-        .dialog-header{
-            display:flex;align-items:center;gap:12px;
-            padding:16px 20px;
-            background:rgba(255,215,80,.08);
-            border-bottom:1px solid rgba(255,255,255,.06);
-        }
-        .dialog-avatar{
-            width:44px;height:44px;border-radius:50%;
-            background:linear-gradient(135deg,#FFD54F,#FF8A65);
-            display:flex;align-items:center;justify-content:center;
-            font-size:22px;
-        }
+        .dialog-header{display:flex;align-items:center;gap:12px;padding:16px 20px;background:rgba(255,215,80,.08);border-bottom:1px solid rgba(255,255,255,.06)}
+        .dialog-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#FFD54F,#FF8A65);display:flex;align-items:center;justify-content:center;font-size:22px}
         .dialog-name{font-size:16px;font-weight:600;color:#FFD54F}
         .dialog-title{font-size:11px;color:rgba(255,255,255,.4)}
-
         .dialog-body{padding:16px 20px}
-        .dialog-text{
-            font-size:14px;color:rgba(255,255,255,.85);
-            line-height:1.7;margin-bottom:16px;
-            padding:12px 16px;
-            background:rgba(255,255,255,.04);
-            border-radius:12px;
-            border-left:3px solid rgba(255,215,80,.3);
-        }
-
+        .dialog-text{font-size:14px;color:rgba(255,255,255,.85);line-height:1.7;margin-bottom:16px;padding:12px 16px;background:rgba(255,255,255,.04);border-radius:12px;border-left:3px solid rgba(255,215,80,.3)}
         .dialog-options{display:flex;flex-direction:column;gap:8px}
-        .dialog-btn{
-            padding:12px 16px;
-            background:rgba(255,255,255,.06);
-            border:1px solid rgba(255,255,255,.1);
-            border-radius:12px;
-            color:#fff;font-size:13px;
-            text-align:left;cursor:pointer;
-            transition:all .2s;
-            display:flex;align-items:center;gap:10px;
-        }
-        .dialog-btn:hover,.dialog-btn:active{background:rgba(255,215,80,.12);border-color:rgba(255,215,80,.3)}
+        .dialog-btn{padding:12px 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:#fff;font-size:13px;text-align:left;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:10px}
+        .dialog-btn:active{background:rgba(255,215,80,.12);border-color:rgba(255,215,80,.3)}
         .dialog-btn .icon{font-size:18px;width:28px;text-align:center}
         .dialog-btn .label{flex:1}
-
-        .dialog-close{
-            display:block;width:100%;padding:14px;
-            background:transparent;border:none;border-top:1px solid rgba(255,255,255,.06);
-            color:rgba(255,255,255,.4);font-size:13px;cursor:pointer;
-        }
-        .dialog-close:active{background:rgba(255,255,255,.03)}
-
-        /* Sub-dialog content */
+        .dialog-close{display:block;width:100%;padding:14px;background:transparent;border:none;border-top:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.4);font-size:13px;cursor:pointer}
         .sub-content{display:none;padding:0 20px 16px}
         .sub-content.active{display:block}
         .sub-text{font-size:13px;color:rgba(255,255,255,.75);line-height:1.8;margin-bottom:12px}
-        .sub-back{
-            padding:8px 16px;background:rgba(255,215,80,.1);
-            border:1px solid rgba(255,215,80,.2);border-radius:20px;
-            color:#FFD54F;font-size:12px;cursor:pointer;
-        }
+        .sub-back{padding:8px 16px;background:rgba(255,215,80,.1);border:1px solid rgba(255,215,80,.2);border-radius:20px;color:#FFD54F;font-size:12px;cursor:pointer;border:1px solid rgba(255,215,80,.2)}
+
+        /* Photo preview */
+        #photo-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:3000;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);flex-direction:column;align-items:center;justify-content:center;padding:20px}
+        #photo-overlay.active{display:flex}
+        #photo-preview{max-width:90%;max-height:60vh;border-radius:16px;border:2px solid rgba(255,255,255,.1);margin-bottom:20px}
+        .photo-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+        .photo-btn{padding:12px 22px;border-radius:25px;font-size:14px;font-weight:600;cursor:pointer;border:none;display:flex;align-items:center;gap:8px;transition:all .15s}
+        .photo-btn:active{transform:scale(.95)}
+        .photo-btn.share{background:linear-gradient(135deg,#25D366,#128C7E);color:#fff}
+        .photo-btn.download{background:linear-gradient(135deg,#FFB74D,#FF8A65);color:#1a0a2e}
+        .photo-btn.close{background:rgba(255,255,255,.1);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.15)}
+        .photo-hint{font-size:12px;color:rgba(255,255,255,.4);margin-top:12px;text-align:center}
 
         .toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:9999;padding:12px 24px;background:rgba(0,0,0,.8);backdrop-filter:blur(12px);border:1px solid rgba(255,200,60,.3);color:#FFD54F;border-radius:25px;font-size:13px;animation:toastAnim 2.5s ease forwards}
         @keyframes toastAnim{0%{opacity:0;transform:translateX(-50%) translateY(-10px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0}}
+
+        /* Shutter animation */
+        #shutter{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:2500;background:#fff;animation:shutterFlash .3s ease}
+        #shutter.active{display:block}
+        @keyframes shutterFlash{0%{opacity:.8}100%{opacity:0}}
     </style>
 </head>
 <body>
@@ -120,292 +87,301 @@
     <div class="hint-sub">觀音將從圖上顯現</div>
 </div>
 
-<!-- ========== DIALOG BOX ========== -->
+<!-- Bottom bar -->
+<div id="bottom-bar">
+    <button class="bar-btn secondary" onclick="takePhoto()">&#x1F4F8; 打卡拍照</button>
+    <button class="bar-btn primary" onclick="openDialog()">&#x1F64F; 對話</button>
+    <button class="bar-btn secondary" onclick="quickShare()">&#x1F4E4; 分享</button>
+</div>
+
+<!-- Shutter flash -->
+<div id="shutter"></div>
+
+<!-- Photo preview -->
+<div id="photo-overlay">
+    <img id="photo-preview" src="" alt="AR 打卡照">
+    <div class="photo-actions">
+        <button class="photo-btn share" onclick="sharePhoto()">&#x1F4E4; 分享到 LINE / FB</button>
+        <button class="photo-btn download" onclick="downloadPhoto()">&#x1F4BE; 儲存照片</button>
+        <button class="photo-btn close" onclick="closePhoto()">&#x2715; 關閉</button>
+    </div>
+    <div class="photo-hint">分享會開啟手機的分享選單，可選 LINE、Facebook、Instagram 等</div>
+</div>
+
+<!-- Dialog overlay -->
 <div id="dialog-overlay">
     <div class="dialog-box">
         <div class="dialog-header">
             <div class="dialog-avatar">&#x89C0;</div>
-            <div>
-                <div class="dialog-name">觀音菩薩</div>
-                <div class="dialog-title">高雄就服站守護者</div>
-            </div>
+            <div><div class="dialog-name">觀音菩薩</div><div class="dialog-title">高雄就服站守護者</div></div>
         </div>
-
-        <!-- Main menu -->
         <div class="dialog-body" id="dialog-main">
-            <div class="dialog-text" id="dialog-message">
-                施主好，我是觀音菩薩。今天想了解什麼呢？
-            </div>
+            <div class="dialog-text" id="dialog-message">施主好，我是觀音菩薩。今天想了解什麼呢？</div>
             <div class="dialog-options">
-                <button class="dialog-btn" onclick="showSub('jobs')">
-                    <span class="icon">&#x1F4BC;</span>
-                    <span class="label">最近有什麼好工作？</span>
-                </button>
-                <button class="dialog-btn" onclick="showSub('training')">
-                    <span class="icon">&#x1F393;</span>
-                    <span class="label">我想學一技之長</span>
-                </button>
-                <button class="dialog-btn" onclick="showSub('consult')">
-                    <span class="icon">&#x1F4AC;</span>
-                    <span class="label">職涯迷惘，想找人聊聊</span>
-                </button>
-                <button class="dialog-btn" onclick="showSub('fortune')">
-                    <span class="icon">&#x2728;</span>
-                    <span class="label">求一個職場籤詩</span>
-                </button>
+                <button class="dialog-btn" onclick="showSub('jobs')"><span class="icon">&#x1F4BC;</span><span class="label">最近有什麼好工作？</span></button>
+                <button class="dialog-btn" onclick="showSub('training')"><span class="icon">&#x1F393;</span><span class="label">我想學一技之長</span></button>
+                <button class="dialog-btn" onclick="showSub('consult')"><span class="icon">&#x1F4AC;</span><span class="label">職涯迷惘，想找人聊聊</span></button>
+                <button class="dialog-btn" onclick="showSub('fortune')"><span class="icon">&#x2728;</span><span class="label">求一個職場籤詩</span></button>
             </div>
         </div>
-
-        <!-- Sub: Jobs -->
-        <div class="sub-content" id="sub-jobs">
-            <div class="sub-text">
-                目前高雄地區熱門職缺包括：<br><br>
-                &#x2022; 半導體產業技術員（楠梓科技園區）<br>
-                &#x2022; 照護服務員（長照機構，免經驗可培訓）<br>
-                &#x2022; 電商營運助理（前鎮區）<br>
-                &#x2022; CNC 機台操作員（大寮區）<br><br>
-                到現場的就業服務櫃檯，就服員會為你媒合最適合的職缺喔！
-            </div>
-            <button class="sub-back" onclick="backToMain()">&#x2190; 還想問其他的</button>
-        </div>
-
-        <!-- Sub: Training -->
-        <div class="sub-content" id="sub-training">
-            <div class="sub-text">
-                訓練就業中心提供免費職業訓練：<br><br>
-                &#x2022; 程式設計與網頁開發班（3個月）<br>
-                &#x2022; 烘焙丙級證照班（2個月）<br>
-                &#x2022; 照護服務員培訓班（1個月）<br>
-                &#x2022; 電商直播行銷班（2個月）<br><br>
-                符合資格者還有訓練津貼可以領，詳情洽現場服務人員！
-            </div>
-            <button class="sub-back" onclick="backToMain()">&#x2190; 還想問其他的</button>
-        </div>
-
-        <!-- Sub: Consult -->
-        <div class="sub-content" id="sub-consult">
-            <div class="sub-text">
-                迷惘是正常的，每個人都會經歷。<br><br>
-                就服站提供免費的一對一職涯諮詢服務，由專業的職涯諮詢師幫你：<br><br>
-                &#x2022; 釐清自己的興趣與優勢<br>
-                &#x2022; 探索適合的職業方向<br>
-                &#x2022; 撰寫履歷與面試技巧指導<br><br>
-                可以直接到現場櫃檯預約，也可以撥打就服專線！
-            </div>
-            <button class="sub-back" onclick="backToMain()">&#x2190; 還想問其他的</button>
-        </div>
-
-        <!-- Sub: Fortune -->
-        <div class="sub-content" id="sub-fortune">
-            <div class="sub-text" id="fortune-text">
-                正在為你求籤...
-            </div>
-            <button class="dialog-btn" onclick="drawFortune()" style="margin-bottom:12px">
-                <span class="icon">&#x1F3B2;</span>
-                <span class="label">再求一籤</span>
-            </button>
-            <button class="sub-back" onclick="backToMain()">&#x2190; 還想問其他的</button>
-        </div>
-
+        <div class="sub-content" id="sub-jobs"><div class="sub-text">目前高雄地區熱門職缺：<br><br>&#x2022; 半導體產業技術員（楠梓科技園區）<br>&#x2022; 照護服務員（長照機構，免經驗可培訓）<br>&#x2022; 電商營運助理（前鎮區）<br>&#x2022; CNC 機台操作員（大寮區）<br><br>到現場就業服務櫃檯，就服員會為你媒合最適合的職缺！</div><button class="sub-back" onclick="backToMain()">&#x2190; 還想問其他的</button></div>
+        <div class="sub-content" id="sub-training"><div class="sub-text">訓練就業中心免費職業訓練：<br><br>&#x2022; 程式設計與網頁開發班（3個月）<br>&#x2022; 烘焙丙級證照班（2個月）<br>&#x2022; 照護服務員培訓班（1個月）<br>&#x2022; 電商直播行銷班（2個月）<br><br>符合資格者有訓練津貼，詳情洽現場服務人員！</div><button class="sub-back" onclick="backToMain()">&#x2190; 還想問其他的</button></div>
+        <div class="sub-content" id="sub-consult"><div class="sub-text">迷惘是正常的，每個人都會經歷。<br><br>就服站提供免費一對一職涯諮詢：<br><br>&#x2022; 釐清興趣與優勢<br>&#x2022; 探索適合的職業方向<br>&#x2022; 履歷撰寫與面試技巧<br><br>直接到現場櫃檯預約，或撥打就服專線！</div><button class="sub-back" onclick="backToMain()">&#x2190; 還想問其他的</button></div>
+        <div class="sub-content" id="sub-fortune"><div class="sub-text" id="fortune-text"></div><button class="dialog-btn" onclick="drawFortune()" style="margin-bottom:12px"><span class="icon">&#x1F3B2;</span><span class="label">再求一籤</span></button><button class="sub-back" onclick="backToMain()">&#x2190; 還想問其他的</button></div>
         <button class="dialog-close" onclick="closeDialog()">收起對話</button>
     </div>
 </div>
 
-<!-- ========== AR SCENE ========== -->
-<a-scene embedded arjs="sourceType:webcam; debugUIEnabled:false;" renderer="logarithmicDepthBuffer:true; antialias:true; alpha:true;" vr-mode-ui="enabled:false" id="ar-scene"
-    cursor="rayOrigin: mouse; fuse: false;"
-    raycaster="objects: .clickable"
->
+<!-- AR Scene -->
+<a-scene embedded arjs="sourceType:webcam; debugUIEnabled:false;" renderer="logarithmicDepthBuffer:true; antialias:true; alpha:true; preserveDrawingBuffer:true;" vr-mode-ui="enabled:false" id="ar-scene">
 
 <a-marker preset="hiro" id="ar-marker" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
-
     <a-entity rotation="-90 0 0" scale="0.8 0.8 0.8">
-
-        <!-- Lotus base -->
         <a-cylinder position="0 0.02 0" radius="0.55" height="0.04" color="#D4A574" material="opacity:0.8;transparent:true" segments-radial="24"></a-cylinder>
         <a-sphere position="0.45 0.06 0" scale="0.18 0.08 0.10" color="#E8C89E" material="opacity:0.7;transparent:true"></a-sphere>
         <a-sphere position="-0.45 0.06 0" scale="0.18 0.08 0.10" color="#E8C89E" material="opacity:0.7;transparent:true"></a-sphere>
         <a-sphere position="0 0.06 0.45" scale="0.10 0.08 0.18" color="#E8C89E" material="opacity:0.7;transparent:true"></a-sphere>
         <a-sphere position="0 0.06 -0.45" scale="0.10 0.08 0.18" color="#E8C89E" material="opacity:0.7;transparent:true"></a-sphere>
         <a-cylinder position="0 0.08 0" radius="0.38" height="0.03" color="#F0DFC0" material="opacity:0.65;transparent:true" segments-radial="20"></a-cylinder>
-
-        <!-- CLICKABLE GUANYIN BODY (wrapped in clickable entity) -->
-        <a-entity id="guanyin-clickable" class="clickable"
-            geometry="primitive:cylinder; radius:0.35; height:1.8"
-            position="0 0.95 0"
-            material="opacity:0; transparent:true"
-        ></a-entity>
-
-        <!-- Lower robe -->
         <a-cone position="0 0.45 0" radius-bottom="0.40" radius-top="0.18" height="0.70" color="#F5ECD8" material="opacity:0.92;transparent:true;side:double" segments-radial="24"></a-cone>
-        <!-- Upper torso -->
         <a-cone position="0 0.95 0" radius-bottom="0.18" radius-top="0.10" height="0.40" color="#F5ECD8" material="opacity:0.92;transparent:true;side:double" segments-radial="16"></a-cone>
-        <!-- Shoulders -->
         <a-sphere position="0 1.05 0" scale="0.22 0.07 0.13" color="#F5ECD8" material="opacity:0.85;transparent:true"></a-sphere>
-        <!-- Neck -->
         <a-cylinder position="0 1.16 0" radius="0.055" height="0.10" color="#F8F0E0" material="opacity:0.9;transparent:true" segments-radial="12"></a-cylinder>
-        <!-- Head -->
         <a-sphere position="0 1.30 0" scale="0.13 0.16 0.13" color="#F8F0E0" material="opacity:0.95;transparent:true"></a-sphere>
-        <!-- Hair -->
         <a-sphere position="0 1.40 -0.01" scale="0.12 0.09 0.11" color="#4A3A2A" material="opacity:0.85;transparent:true"></a-sphere>
-        <!-- Crown -->
         <a-cone position="0 1.54 0" radius-bottom="0.08" radius-top="0.025" height="0.22" color="#C9A96E" material="opacity:0.9;transparent:true" segments-radial="8"></a-cone>
         <a-sphere position="0 1.66 0" radius="0.032" color="#FFD54F" material="opacity:0.95;transparent:true;emissive:#FFD54F;emissiveIntensity:0.8"></a-sphere>
-
-        <!-- Halo -->
         <a-torus position="0 1.32 -0.10" radius="0.28" radius-tubular="0.012" color="#FFD54F" material="opacity:0.6;transparent:true;emissive:#FFD54F;emissiveIntensity:1.0" segments-radial="40" segments-tubular="12"></a-torus>
-
-        <!-- Arms -->
         <a-cylinder position="-0.16 0.88 0.04" radius="0.04" height="0.30" rotation="0 0 12" color="#F5ECD8" material="opacity:0.85;transparent:true"></a-cylinder>
         <a-cylinder position="0.16 0.88 0.04" radius="0.04" height="0.30" rotation="0 0 -12" color="#F5ECD8" material="opacity:0.85;transparent:true"></a-cylinder>
-        <!-- Hands -->
         <a-sphere position="0 0.56 0.15" radius="0.05" color="#F8F0E0" material="opacity:0.9;transparent:true"></a-sphere>
-
-        <!-- Vase -->
         <a-cylinder position="0 0.50 0.17" radius="0.028" height="0.09" color="#FFFFFF" material="opacity:0.85;transparent:true"></a-cylinder>
         <a-sphere position="0 0.46 0.17" radius="0.033" color="#FFFFFF" material="opacity:0.8;transparent:true"></a-sphere>
-
-        <!-- Scarves -->
         <a-cylinder position="-0.28 0.70 -0.02" radius="0.014" height="0.65" rotation="0 0 6" color="#FFE0B2" material="opacity:0.30;transparent:true"></a-cylinder>
         <a-cylinder position="0.28 0.70 -0.02" radius="0.014" height="0.65" rotation="0 0 -6" color="#FFE0B2" material="opacity:0.30;transparent:true"></a-cylinder>
-
-        <!-- Necklace -->
         <a-torus position="0 1.06 0.04" rotation="90 0 0" radius="0.10" radius-tubular="0.005" color="#C9A96E" material="opacity:0.55;transparent:true" segments-radial="20" segments-tubular="8"></a-torus>
-
-        <!-- Lighting -->
         <a-light type="point" intensity="0.8" distance="5" color="#FFD54F" position="0 2.0 0.8"></a-light>
         <a-light type="ambient" intensity="0.6" color="#FFF8E1"></a-light>
-
-        <!-- Particles -->
         <a-sphere position="0.35 1.0 0.2" radius="0.018" color="#FFD54F" material="opacity:0.7;transparent:true;emissive:#FFD54F;emissiveIntensity:0.6" animation="property:position;to:0.35 1.5 0.2;dur:3000;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
         <a-sphere position="-0.30 0.7 0.15" radius="0.014" color="#FFA726" material="opacity:0.6;transparent:true;emissive:#FFA726;emissiveIntensity:0.4" animation="property:position;to:-0.30 1.2 0.15;dur:2700;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
-        <a-sphere position="0.20 1.4 -0.10" radius="0.016" color="#FFD54F" material="opacity:0.5;transparent:true;emissive:#FFD54F;emissiveIntensity:0.3" animation="property:position;to:0.20 1.8 -0.10;dur:3200;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
-
-        <!-- Rotating ring -->
         <a-torus position="0 0.06 0" rotation="90 0 0" radius="0.58" radius-tubular="0.004" color="#FFD54F" material="opacity:0.25;transparent:true;emissive:#FFD54F;emissiveIntensity:0.3" animation="property:rotation;to:90 360 0;dur:10000;easing:linear;loop:true"></a-torus>
     </a-entity>
 </a-marker>
-
 <a-entity camera></a-entity>
 </a-scene>
 
 <script>
-// Loading
+// ============ INIT ============
 const scene = document.getElementById('ar-scene');
 scene.addEventListener('loaded', () => { setTimeout(() => { document.getElementById('loading-overlay').classList.add('hidden'); }, 1500); });
 setTimeout(() => { document.getElementById('loading-overlay').classList.add('hidden'); }, 5000);
 
-// Marker events
-const marker = document.getElementById('ar-marker');
 let markerVisible = false;
-
+const marker = document.getElementById('ar-marker');
 marker.addEventListener('markerFound', () => {
     markerVisible = true;
-    const b = document.getElementById('status-badge');
-    b.textContent = '觀音顯現'; b.classList.remove('gold'); b.classList.add('green');
-    const h = document.getElementById('scan-hint');
-    h.querySelector('.hint-box').textContent = '點按觀音開始對話';
-    h.querySelector('.hint-sub').textContent = '輕觸螢幕上的觀音像';
+    document.getElementById('status-badge').textContent = '觀音顯現';
+    document.getElementById('status-badge').classList.remove('gold');
+    document.getElementById('status-badge').classList.add('green');
+    document.getElementById('scan-hint').querySelector('.hint-box').textContent = '點按觀音或使用下方功能';
+    document.getElementById('scan-hint').querySelector('.hint-sub').textContent = '拍照打卡 / 對話互動 / 分享';
 });
-
 marker.addEventListener('markerLost', () => {
     markerVisible = false;
-    const b = document.getElementById('status-badge');
-    b.textContent = '搜尋中'; b.classList.remove('green'); b.classList.add('gold');
-    const h = document.getElementById('scan-hint');
-    h.style.opacity = '1';
-    h.querySelector('.hint-box').textContent = '請將相機對準 Hiro 標記圖';
-    h.querySelector('.hint-sub').textContent = '觀音將從圖上顯現';
+    document.getElementById('status-badge').textContent = '搜尋中';
+    document.getElementById('status-badge').classList.remove('green');
+    document.getElementById('status-badge').classList.add('gold');
+    document.getElementById('scan-hint').querySelector('.hint-box').textContent = '請將相機對準 Hiro 標記圖';
+    document.getElementById('scan-hint').querySelector('.hint-sub').textContent = '觀音將從圖上顯現';
 });
 
-// Click on Guanyin to open dialog
-const clickTarget = document.getElementById('guanyin-clickable');
-clickTarget.addEventListener('click', () => {
-    if (markerVisible) {
+// Touch on center to open dialog
+document.addEventListener('touchstart', (e) => {
+    if (!markerVisible) return;
+    if (document.getElementById('dialog-overlay').classList.contains('active')) return;
+    if (document.getElementById('photo-overlay').classList.contains('active')) return;
+    const x = e.touches[0].clientX / window.innerWidth;
+    const y = e.touches[0].clientY / window.innerHeight;
+    if (x > 0.25 && x < 0.75 && y > 0.15 && y < 0.65) {
         openDialog();
     }
 });
 
-// Also handle touch on the whole scene as fallback
-// (AR.js raycasting can be finicky on mobile)
-let touchHandled = false;
-document.addEventListener('touchstart', (e) => {
-    if (markerVisible && !document.getElementById('dialog-overlay').classList.contains('active')) {
-        // Only trigger if touch is in the center area of screen (roughly where Guanyin would be)
-        const x = e.touches[0].clientX / window.innerWidth;
-        const y = e.touches[0].clientY / window.innerHeight;
-        if (x > 0.2 && x < 0.8 && y > 0.15 && y < 0.75) {
-            if (!touchHandled) {
-                touchHandled = true;
-                setTimeout(() => { touchHandled = false; }, 500);
-                openDialog();
-            }
-        }
+// ============ PHOTO CAPTURE ============
+let capturedBlob = null;
+
+function takePhoto() {
+    if (!markerVisible) { showToast('請先對準標記讓觀音顯現'); return; }
+
+    // Shutter flash
+    const shutter = document.getElementById('shutter');
+    shutter.classList.add('active');
+    setTimeout(() => shutter.classList.remove('active'), 300);
+
+    // Grab AR canvas
+    const arCanvas = document.querySelector('canvas');
+    if (!arCanvas) { showToast('截圖失敗，請重試'); return; }
+
+    // Create composite canvas with branding
+    const compCanvas = document.createElement('canvas');
+    const w = arCanvas.width;
+    const h = arCanvas.height;
+    compCanvas.width = w;
+    compCanvas.height = h;
+    const ctx = compCanvas.getContext('2d');
+
+    // Draw AR scene
+    ctx.drawImage(arCanvas, 0, 0);
+
+    // Semi-transparent bottom bar
+    const barH = h * 0.12;
+    const barY = h - barH;
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillRect(0, barY, w, barH);
+
+    // Brand text
+    const fontSize = Math.max(14, Math.round(w * 0.028));
+    ctx.font = `bold ${fontSize}px -apple-system, "Microsoft JhengHei", sans-serif`;
+    ctx.fillStyle = '#FFD54F';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('AR \u89C0\u97F3\u7948\u798F\u9AD4\u9A57', w * 0.04, barY + barH * 0.35);
+
+    ctx.font = `${Math.round(fontSize * 0.75)}px -apple-system, "Microsoft JhengHei", sans-serif`;
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.fillText('\u9AD8\u96C4\u5E02\u8A13\u7DF4\u5C31\u696D\u4E2D\u5FC3', w * 0.04, barY + barH * 0.65);
+
+    // Date stamp
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')}`;
+    ctx.font = `${Math.round(fontSize * 0.7)}px -apple-system, sans-serif`;
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.textAlign = 'right';
+    ctx.fillText(dateStr, w * 0.96, barY + barH * 0.35);
+
+    // QR hint
+    ctx.font = `${Math.round(fontSize * 0.6)}px -apple-system, sans-serif`;
+    ctx.fillStyle = 'rgba(255,215,80,0.6)';
+    ctx.fillText('#AR\u89C0\u97F3 #\u9AD8\u96C4\u5C31\u670D\u7AD9', w * 0.96, barY + barH * 0.65);
+    ctx.textAlign = 'left';
+
+    // Top corner badge
+    const badgeW = w * 0.25;
+    const badgeH = h * 0.04;
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    roundRect(ctx, w * 0.03, h * 0.03, badgeW, badgeH, badgeH/2);
+    ctx.fill();
+    ctx.font = `bold ${Math.round(fontSize * 0.65)}px -apple-system, sans-serif`;
+    ctx.fillStyle = '#FFD54F';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('\u2728 \u89C0\u97F3\u986F\u73FE', w * 0.05, h * 0.03 + badgeH/2);
+
+    // Convert to blob
+    compCanvas.toBlob((blob) => {
+        capturedBlob = blob;
+        const url = URL.createObjectURL(blob);
+        document.getElementById('photo-preview').src = url;
+        document.getElementById('photo-overlay').classList.add('active');
+    }, 'image/jpeg', 0.92);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.lineTo(x+w-r, y);
+    ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+    ctx.lineTo(x+w, y+h-r);
+    ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+    ctx.lineTo(x+r, y+h);
+    ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+    ctx.lineTo(x, y+r);
+    ctx.quadraticCurveTo(x, y, x+r, y);
+    ctx.closePath();
+}
+
+function sharePhoto() {
+    if (!capturedBlob) return;
+    const file = new File([capturedBlob], 'AR\u89C0\u97F3\u6253\u5361.jpg', { type: 'image/jpeg' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({
+            title: 'AR \u89C0\u97F3\u7948\u798F\u9AD4\u9A57',
+            text: '\u6211\u5728\u9AD8\u96C4\u5C31\u670D\u7AD9\u9047\u898B\u4E86 AR \u89C0\u97F3\uFF01\u2728\u{1F64F} #AR\u89C0\u97F3 #\u9AD8\u96C4\u5C31\u670D\u7AD9',
+            files: [file]
+        }).then(() => {
+            showToast('\u5206\u4EAB\u6210\u529F\uFF01');
+        }).catch(() => {});
+    } else {
+        downloadPhoto();
+        showToast('\u7167\u7247\u5DF2\u5132\u5B58\uFF0C\u53EF\u624B\u52D5\u5206\u4EAB\u5230 LINE / FB');
     }
-});
+}
 
-// Dialog logic
+function downloadPhoto() {
+    if (!capturedBlob) return;
+    const url = URL.createObjectURL(capturedBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'AR\u89C0\u97F3\u6253\u5361_' + new Date().toLocaleDateString('zh-TW').replace(/\//g,'') + '.jpg';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('\u7167\u7247\u5DF2\u5132\u5B58\uFF01');
+}
+
+function closePhoto() {
+    document.getElementById('photo-overlay').classList.remove('active');
+    if (capturedBlob) URL.revokeObjectURL(document.getElementById('photo-preview').src);
+}
+
+function quickShare() {
+    if (navigator.share) {
+        navigator.share({
+            title: 'AR \u89C0\u97F3\u7948\u798F\u9AD4\u9A57',
+            text: '\u4F86\u9AD8\u96C4\u5C31\u670D\u7AD9\u9AD4\u9A57 AR \u89C0\u97F3\uFF01\u2728',
+            url: location.href
+        }).catch(() => {});
+    } else {
+        navigator.clipboard.writeText(location.href).then(() => showToast('\u9023\u7D50\u5DF2\u8907\u88FD\uFF01'));
+    }
+}
+
+// ============ DIALOG ============
 const greetings = [
-    "施主好，我是觀音菩薩。今天想了解什麼呢？",
-    "阿彌陀佛，有緣人。讓我指引你前方的道路。",
-    "歡迎來到就服站，我在這裡等你很久了。想問什麼？",
-    "施主面帶英氣，看來正在尋找新的方向。讓我幫你。",
+    "\u65BD\u4E3B\u597D\uFF0C\u6211\u662F\u89C0\u97F3\u83E9\u85A9\u3002\u4ECA\u5929\u60F3\u4E86\u89E3\u4EC0\u9EBC\u5462\uFF1F",
+    "\u963F\u5F4C\u9640\u4F5B\uFF0C\u6709\u7DE3\u4EBA\u3002\u8B93\u6211\u6307\u5F15\u4F60\u524D\u65B9\u7684\u9053\u8DEF\u3002",
+    "\u6B61\u8FCE\u4F86\u5230\u5C31\u670D\u7AD9\uFF0C\u60F3\u554F\u4EC0\u9EBC\uFF1F",
 ];
-
 const fortunes = [
-    { sign: "上上籤", poem: "雲開見月明，\n貴人自然來。\n莫急且耐心，\n好缺在前方。", advice: "近期會有貴人引薦好機會，保持積極心態！" },
-    { sign: "上籤", poem: "春風化雨時，\n百花齊盛開。\n進修添技能，\n前途自然寬。", advice: "建議參加職業訓練課程，提升技能就是最好的投資。" },
-    { sign: "中籤", poem: "行路雖漫漫，\n步步皆向前。\n回首看來時，\n已過萬重山。", advice: "目前方向正確，持續努力就好。可以來就服站做職涯諮詢。" },
-    { sign: "中上籤", poem: "轉角遇知音，\n握手共前行。\n團隊力量大，\n獨行不如群。", advice: "適合往團隊合作型的工作發展，面試時展現溝通能力！" },
-    { sign: "上上籤", poem: "金鱗豈是池中物，\n一遇風雲便化龍。", advice: "你的才華即將被看見！趕快更新履歷，機會就在眼前。" },
+    { sign: "\u4E0A\u4E0A\u7C64", poem: "\u96F2\u958B\u898B\u6708\u660E\uFF0C\n\u8CB4\u4EBA\u81EA\u7136\u4F86\u3002\n\u83AB\u6025\u4E14\u8010\u5FC3\uFF0C\n\u597D\u7F3A\u5728\u524D\u65B9\u3002", advice: "\u8FD1\u671F\u6703\u6709\u8CB4\u4EBA\u5F15\u85A6\u597D\u6A5F\u6703\uFF01" },
+    { sign: "\u4E0A\u7C64", poem: "\u6625\u98A8\u5316\u96E8\u6642\uFF0C\n\u767E\u82B1\u9F4A\u76DB\u958B\u3002\n\u9032\u4FEE\u6DFB\u6280\u80FD\uFF0C\n\u524D\u9014\u81EA\u7136\u5BEC\u3002", advice: "\u5EFA\u8B70\u53C3\u52A0\u8077\u696D\u8A13\u7DF4\u8AB2\u7A0B\uFF01" },
+    { sign: "\u4E2D\u4E0A\u7C64", poem: "\u8F49\u89D2\u9047\u77E5\u97F3\uFF0C\n\u63E1\u624B\u5171\u524D\u884C\u3002\n\u5718\u968A\u529B\u91CF\u5927\uFF0C\n\u7368\u884C\u4E0D\u5982\u7FA4\u3002", advice: "\u9069\u5408\u5718\u968A\u5408\u4F5C\u578B\u5DE5\u4F5C\uFF01" },
+    { sign: "\u4E0A\u4E0A\u7C64", poem: "\u91D1\u9C57\u8C48\u662F\u6C60\u4E2D\u7269\uFF0C\n\u4E00\u9047\u98A8\u96F2\u4FBF\u5316\u9F8D\u3002", advice: "\u8D95\u5FEB\u66F4\u65B0\u5C65\u6B77\uFF0C\u6A5F\u6703\u5C31\u5728\u773C\u524D\uFF01" },
 ];
 
 function openDialog() {
-    const msg = greetings[Math.floor(Math.random() * greetings.length)];
-    document.getElementById('dialog-message').textContent = msg;
+    if (!markerVisible) { showToast('\u8ACB\u5148\u5C0D\u6E96\u6A19\u8A18\u8B93\u89C0\u97F3\u986F\u73FE'); return; }
+    document.getElementById('dialog-message').textContent = greetings[Math.floor(Math.random()*greetings.length)];
     document.getElementById('dialog-main').style.display = 'block';
     document.querySelectorAll('.sub-content').forEach(el => el.classList.remove('active'));
     document.getElementById('dialog-overlay').classList.add('active');
-    document.getElementById('scan-hint').style.opacity = '0';
 }
-
-function closeDialog() {
-    document.getElementById('dialog-overlay').classList.remove('active');
-    if (markerVisible) {
-        const h = document.getElementById('scan-hint');
-        h.style.opacity = '1';
-        h.querySelector('.hint-box').textContent = '再次點按觀音繼續對話';
-        h.querySelector('.hint-sub').textContent = '';
-    }
-}
-
+function closeDialog() { document.getElementById('dialog-overlay').classList.remove('active'); }
 function showSub(id) {
     document.getElementById('dialog-main').style.display = 'none';
     document.querySelectorAll('.sub-content').forEach(el => el.classList.remove('active'));
-    const sub = document.getElementById('sub-' + id);
-    sub.classList.add('active');
-    if (id === 'fortune') drawFortune();
+    document.getElementById('sub-'+id).classList.add('active');
+    if (id==='fortune') drawFortune();
 }
-
 function backToMain() {
     document.querySelectorAll('.sub-content').forEach(el => el.classList.remove('active'));
     document.getElementById('dialog-main').style.display = 'block';
 }
-
 function drawFortune() {
-    const f = fortunes[Math.floor(Math.random() * fortunes.length)];
+    const f = fortunes[Math.floor(Math.random()*fortunes.length)];
     document.getElementById('fortune-text').innerHTML =
-        '<div style="text-align:center;margin-bottom:12px;">' +
-        '<span style="font-size:20px;color:#FFD54F;font-weight:700;">' + f.sign + '</span></div>' +
-        '<div style="text-align:center;font-size:16px;color:rgba(255,255,255,.9);line-height:2;margin-bottom:12px;font-style:italic;white-space:pre-line;">' + f.poem + '</div>' +
-        '<div style="font-size:13px;color:rgba(255,255,255,.6);padding:10px 14px;background:rgba(255,215,80,.06);border-radius:8px;">' +
-        '&#x1F4A1; 菩薩解籤：' + f.advice + '</div>';
+        '<div style="text-align:center;margin-bottom:12px"><span style="font-size:20px;color:#FFD54F;font-weight:700">'+f.sign+'</span></div>'+
+        '<div style="text-align:center;font-size:16px;color:rgba(255,255,255,.9);line-height:2;margin-bottom:12px;white-space:pre-line">'+f.poem+'</div>'+
+        '<div style="font-size:13px;color:rgba(255,255,255,.6);padding:10px 14px;background:rgba(255,215,80,.06);border-radius:8px">&#x1F4A1; \u83E9\u85A9\u89E3\u7C64\uFF1A'+f.advice+'</div>';
 }
-
-function showToast(msg) {
-    const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
-    document.body.appendChild(t); setTimeout(() => t.remove(), 2500);
-}
+function showToast(msg) { const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500); }
 </script>
 </body>
 </html>
