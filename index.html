@@ -7,24 +7,29 @@
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <script>
-    // Custom component: holographic material effect
     AFRAME.registerComponent('holographic', {
         init: function() {
-            this.el.addEventListener('model-loaded', () => {
-                const mesh = this.el.getObject3D('mesh');
+            var el = this.el;
+            el.addEventListener('model-loaded', function() {
+                var mesh = el.getObject3D('mesh');
                 if (!mesh) return;
-                mesh.traverse((node) => {
-                    if (node.isMesh && node.material) {
-                        const mat = node.material;
-                        mat.transparent = true;
-                        mat.opacity = 0.75;
-                        mat.emissive = new THREE.Color(0x40E0D0);
-                        mat.emissiveIntensity = 0.35;
-                        mat.color = new THREE.Color(0x80E8E0);
-                        mat.metalness = 0.3;
-                        mat.roughness = 0.4;
-                        mat.side = THREE.DoubleSide;
-                        mat.needsUpdate = true;
+                mesh.traverse(function(node) {
+                    if (node.isMesh) {
+                        var oldMap = node.material.map;
+                        var oldNormalMap = node.material.normalMap;
+                        node.material = new THREE.MeshStandardMaterial({
+                            map: oldMap,
+                            normalMap: oldNormalMap,
+                            color: new THREE.Color(0x88F0E8),
+                            emissive: new THREE.Color(0x40E0D0),
+                            emissiveIntensity: 0.3,
+                            metalness: 0.4,
+                            roughness: 0.3,
+                            transparent: true,
+                            opacity: 0.78,
+                            side: THREE.DoubleSide,
+                        });
+                        node.material.needsUpdate = true;
                     }
                 });
             });
@@ -91,12 +96,7 @@
     </style>
 </head>
 <body>
-<div id="loading-overlay">
-    <div class="loader"></div>
-    <h2>AR 觀音互動體驗</h2>
-    <p>正在載入 3D 模型...</p>
-    <div id="loading-progress">請稍候</div>
-</div>
+<div id="loading-overlay"><div class="loader"></div><h2>AR 觀音互動體驗</h2><p>正在載入 3D 模型...</p><div id="loading-progress">請稍候</div></div>
 <div id="hud-top"><span class="hud-badge">高雄就服站</span><span class="hud-badge gold" id="status-badge">搜尋中</span></div>
 <div id="scan-hint"><div class="hint-box">請將相機對準 Hiro 標記圖</div><div class="hint-sub">觀音將從圖上顯現</div></div>
 <div id="bottom-bar">
@@ -138,44 +138,32 @@
 <a-assets timeout="60000">
     <a-asset-item id="guanyin-model" src="guanyin.glb"></a-asset-item>
 </a-assets>
-
 <a-marker preset="hiro" id="ar-marker" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
 
-    <!-- Guanyin model: rotation fixed to face camera, holographic material applied -->
+    <!-- FIX: rotation Y=180 to face camera -->
     <a-entity
         gltf-model="#guanyin-model"
         holographic
-        rotation="-90 0 0"
+        rotation="-90 180 0"
         scale="0.5 0.5 0.5"
         position="0 0 0"
         id="guanyin-entity"
         animation="property:position; to:0 0.03 0; dur:2000; easing:easeInOutSine; loop:true; dir:alternate"
     ></a-entity>
 
-    <!-- Holographic glow lights -->
     <a-light type="point" intensity="0.6" distance="3" color="#40E0D0" position="0 0.8 0.5"></a-light>
     <a-light type="point" intensity="0.3" distance="2" color="#40E0D0" position="0 0.2 -0.5"></a-light>
     <a-light type="ambient" intensity="0.5" color="#E0FFFF"></a-light>
     <a-light type="directional" intensity="0.5" color="#FFFFFF" position="1 2 1"></a-light>
 
-    <!-- Holographic halo ring -->
-    <a-torus position="0 0.6 -0.12" rotation="-90 0 0" radius="0.45" radius-tubular="0.008" color="#40E0D0" material="opacity:0.35;transparent:true;emissive:#40E0D0;emissiveIntensity:0.8" segments-radial="48" segments-tubular="12"
-        animation="property:rotation; to:-90 360 0; dur:15000; easing:linear; loop:true"></a-torus>
+    <a-torus position="0 0.6 -0.12" rotation="-90 0 0" radius="0.45" radius-tubular="0.008" color="#40E0D0" material="opacity:0.35;transparent:true;emissive:#40E0D0;emissiveIntensity:0.8" segments-radial="48" segments-tubular="12" animation="property:rotation;to:-90 360 0;dur:15000;easing:linear;loop:true"></a-torus>
+    <a-torus position="0 0.6 -0.14" rotation="-90 0 0" radius="0.55" radius-tubular="0.005" color="#20B2AA" material="opacity:0.2;transparent:true;emissive:#20B2AA;emissiveIntensity:0.5" segments-radial="48" segments-tubular="12" animation="property:rotation;to:-90 -360 0;dur:20000;easing:linear;loop:true"></a-torus>
 
-    <!-- Outer halo -->
-    <a-torus position="0 0.6 -0.14" rotation="-90 0 0" radius="0.55" radius-tubular="0.005" color="#20B2AA" material="opacity:0.2;transparent:true;emissive:#20B2AA;emissiveIntensity:0.5" segments-radial="48" segments-tubular="12"
-        animation="property:rotation; to:-90 -360 0; dur:20000; easing:linear; loop:true"></a-torus>
-
-    <!-- Floating holographic particles -->
     <a-sphere position="0.35 0.7 0.2" radius="0.015" color="#40E0D0" material="opacity:0.6;transparent:true;emissive:#40E0D0;emissiveIntensity:0.8" animation="property:position;to:0.35 1.2 0.2;dur:3000;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
     <a-sphere position="-0.30 0.4 0.15" radius="0.012" color="#7FFFD4" material="opacity:0.5;transparent:true;emissive:#7FFFD4;emissiveIntensity:0.6" animation="property:position;to:-0.30 0.9 0.15;dur:2700;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
     <a-sphere position="0.20 0.9 -0.1" radius="0.014" color="#40E0D0" material="opacity:0.45;transparent:true;emissive:#40E0D0;emissiveIntensity:0.5" animation="property:position;to:0.20 1.4 -0.1;dur:3200;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
-    <a-sphere position="-0.15 1.1 0.20" radius="0.010" color="#48D1CC" material="opacity:0.5;transparent:true;emissive:#48D1CC;emissiveIntensity:0.7" animation="property:position;to:-0.15 1.5 0.20;dur:2500;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
-    <a-sphere position="0.40 0.3 0.10" radius="0.011" color="#7FFFD4" material="opacity:0.4;transparent:true;emissive:#7FFFD4;emissiveIntensity:0.5" animation="property:position;to:0.40 0.8 0.10;dur:3500;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
 
-    <!-- Base glow ring -->
     <a-torus position="0 0.02 0" rotation="-90 0 0" radius="0.5" radius-tubular="0.004" color="#40E0D0" material="opacity:0.2;transparent:true;emissive:#40E0D0;emissiveIntensity:0.4" animation="property:rotation;to:-90 360 0;dur:8000;easing:linear;loop:true"></a-torus>
-
 </a-marker>
 <a-entity camera></a-entity>
 </a-scene>
@@ -185,7 +173,6 @@
 <script>
 var scene = document.getElementById('ar-scene');
 var guanyinEntity = document.getElementById('guanyin-entity');
-
 guanyinEntity.addEventListener('model-loaded', function() {
     document.getElementById('loading-overlay').classList.add('hidden');
     showToast('3D 觀音載入完成！');
@@ -220,13 +207,21 @@ document.addEventListener('touchstart', function(e) {
     if (x > 0.25 && x < 0.75 && y > 0.15 && y < 0.65) { openDialog(); }
 });
 
+// FIX: Capture both video feed AND WebGL canvas
 var frameBuffer = document.getElementById('frame-buffer');
 var frameCtx = frameBuffer.getContext('2d');
+
 function captureFrame() {
-    var arCanvas = document.querySelector('a-scene canvas') || document.querySelector('canvas');
-    if (arCanvas && arCanvas.width > 0) {
-        frameBuffer.width = arCanvas.width;
-        frameBuffer.height = arCanvas.height;
+    var video = document.querySelector('video');
+    var arCanvas = document.querySelector('a-scene canvas');
+    if (video && arCanvas && arCanvas.width > 0) {
+        var w = arCanvas.width;
+        var h = arCanvas.height;
+        frameBuffer.width = w;
+        frameBuffer.height = h;
+        // Draw camera video feed first
+        frameCtx.drawImage(video, 0, 0, w, h);
+        // Overlay the WebGL canvas (3D objects) on top
         frameCtx.drawImage(arCanvas, 0, 0);
     }
     requestAnimationFrame(captureFrame);
