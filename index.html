@@ -7,28 +7,16 @@
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <script>
-    AFRAME.registerComponent('holographic', {
+    // Brighten model materials without changing color
+    AFRAME.registerComponent('brighten', {
         init: function() {
-            var el = this.el;
-            el.addEventListener('model-loaded', function() {
-                var mesh = el.getObject3D('mesh');
+            this.el.addEventListener('model-loaded', function() {
+                var mesh = this.getObject3D('mesh');
                 if (!mesh) return;
                 mesh.traverse(function(node) {
-                    if (node.isMesh) {
-                        var oldMap = node.material.map;
-                        var oldNormalMap = node.material.normalMap;
-                        node.material = new THREE.MeshStandardMaterial({
-                            map: oldMap,
-                            normalMap: oldNormalMap,
-                            color: new THREE.Color(0x88F0E8),
-                            emissive: new THREE.Color(0x40E0D0),
-                            emissiveIntensity: 0.3,
-                            metalness: 0.4,
-                            roughness: 0.3,
-                            transparent: true,
-                            opacity: 0.78,
-                            side: THREE.DoubleSide,
-                        });
+                    if (node.isMesh && node.material) {
+                        node.material.emissive = new THREE.Color(0x333333);
+                        node.material.emissiveIntensity = 0.3;
                         node.material.needsUpdate = true;
                     }
                 });
@@ -63,21 +51,21 @@
         .dialog-box{width:100%;max-width:400px;background:linear-gradient(135deg,#1e1040,#1a1a3e);border:1px solid rgba(255,255,255,.12);border-radius:24px 24px 12px 12px;overflow:hidden;animation:slideUp .4s ease;margin-bottom:env(safe-area-inset-bottom)}
         @keyframes slideUp{from{transform:translateY(100px);opacity:0}to{transform:translateY(0);opacity:1}}
         .dialog-header{display:flex;align-items:center;gap:12px;padding:16px 20px;background:rgba(255,215,80,.08);border-bottom:1px solid rgba(255,255,255,.06)}
-        .dialog-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#40E0D0,#20B2AA);display:flex;align-items:center;justify-content:center;font-size:22px}
-        .dialog-name{font-size:16px;font-weight:600;color:#40E0D0}
+        .dialog-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#FFD54F,#FF8A65);display:flex;align-items:center;justify-content:center;font-size:22px}
+        .dialog-name{font-size:16px;font-weight:600;color:#FFD54F}
         .dialog-title{font-size:11px;color:rgba(255,255,255,.4)}
         .dialog-body{padding:16px 20px}
-        .dialog-text{font-size:14px;color:rgba(255,255,255,.85);line-height:1.7;margin-bottom:16px;padding:12px 16px;background:rgba(255,255,255,.04);border-radius:12px;border-left:3px solid rgba(64,224,208,.3)}
+        .dialog-text{font-size:14px;color:rgba(255,255,255,.85);line-height:1.7;margin-bottom:16px;padding:12px 16px;background:rgba(255,255,255,.04);border-radius:12px;border-left:3px solid rgba(255,215,80,.3)}
         .dialog-options{display:flex;flex-direction:column;gap:8px}
         .dialog-btn{padding:12px 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:#fff;font-size:13px;text-align:left;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:10px}
-        .dialog-btn:active{background:rgba(64,224,208,.12);border-color:rgba(64,224,208,.3)}
+        .dialog-btn:active{background:rgba(255,215,80,.12);border-color:rgba(255,215,80,.3)}
         .dialog-btn .icon{font-size:18px;width:28px;text-align:center}
         .dialog-btn .label{flex:1}
         .dialog-close{display:block;width:100%;padding:14px;background:transparent;border:none;border-top:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.4);font-size:13px;cursor:pointer}
         .sub-content{display:none;padding:0 20px 16px}
         .sub-content.active{display:block}
         .sub-text{font-size:13px;color:rgba(255,255,255,.75);line-height:1.8;margin-bottom:12px}
-        .sub-back{padding:8px 16px;background:rgba(64,224,208,.1);border:1px solid rgba(64,224,208,.2);border-radius:20px;color:#40E0D0;font-size:12px;cursor:pointer}
+        .sub-back{padding:8px 16px;background:rgba(255,215,80,.1);border:1px solid rgba(255,215,80,.2);border-radius:20px;color:#FFD54F;font-size:12px;cursor:pointer}
         #photo-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:3000;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);flex-direction:column;align-items:center;justify-content:center;padding:20px}
         #photo-overlay.active{display:flex}
         #photo-preview{max-width:90%;max-height:55vh;border-radius:16px;border:2px solid rgba(255,255,255,.1);margin-bottom:20px}
@@ -88,7 +76,7 @@
         .photo-btn.download{background:linear-gradient(135deg,#FFB74D,#FF8A65);color:#1a0a2e}
         .photo-btn.close{background:rgba(255,255,255,.1);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.15)}
         .photo-hint{font-size:12px;color:rgba(255,255,255,.4);margin-top:12px;text-align:center}
-        .toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:9999;padding:12px 24px;background:rgba(0,0,0,.8);backdrop-filter:blur(12px);border:1px solid rgba(64,224,208,.3);color:#40E0D0;border-radius:25px;font-size:13px;animation:toastAnim 2.5s ease forwards}
+        .toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:9999;padding:12px 24px;background:rgba(0,0,0,.8);backdrop-filter:blur(12px);border:1px solid rgba(255,200,60,.3);color:#FFD54F;border-radius:25px;font-size:13px;animation:toastAnim 2.5s ease forwards}
         @keyframes toastAnim{0%{opacity:0;transform:translateX(-50%) translateY(-10px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0}}
         #shutter{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:2500;background:#fff;animation:shutterFlash .3s ease}
         #shutter.active{display:block}
@@ -140,30 +128,34 @@
 </a-assets>
 <a-marker preset="hiro" id="ar-marker" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
 
-    <!-- FIX: rotation Y=180 to face camera -->
+    <!-- Model: original colors, brightened, correct orientation -->
     <a-entity
         gltf-model="#guanyin-model"
-        holographic
-        rotation="-90 180 0"
+        brighten
+        rotation="0 0 0"
         scale="0.5 0.5 0.5"
         position="0 0 0"
         id="guanyin-entity"
         animation="property:position; to:0 0.03 0; dur:2000; easing:easeInOutSine; loop:true; dir:alternate"
     ></a-entity>
 
-    <a-light type="point" intensity="0.6" distance="3" color="#40E0D0" position="0 0.8 0.5"></a-light>
-    <a-light type="point" intensity="0.3" distance="2" color="#40E0D0" position="0 0.2 -0.5"></a-light>
-    <a-light type="ambient" intensity="0.5" color="#E0FFFF"></a-light>
-    <a-light type="directional" intensity="0.5" color="#FFFFFF" position="1 2 1"></a-light>
+    <!-- Bright warm lighting -->
+    <a-light type="ambient" intensity="0.8" color="#FFFFFF"></a-light>
+    <a-light type="directional" intensity="1.0" color="#FFFAF0" position="0 2 1"></a-light>
+    <a-light type="directional" intensity="0.5" color="#FFF8DC" position="-1 1 -1"></a-light>
+    <a-light type="point" intensity="0.6" distance="4" color="#FFD54F" position="0 1 0.5"></a-light>
 
-    <a-torus position="0 0.6 -0.12" rotation="-90 0 0" radius="0.45" radius-tubular="0.008" color="#40E0D0" material="opacity:0.35;transparent:true;emissive:#40E0D0;emissiveIntensity:0.8" segments-radial="48" segments-tubular="12" animation="property:rotation;to:-90 360 0;dur:15000;easing:linear;loop:true"></a-torus>
-    <a-torus position="0 0.6 -0.14" rotation="-90 0 0" radius="0.55" radius-tubular="0.005" color="#20B2AA" material="opacity:0.2;transparent:true;emissive:#20B2AA;emissiveIntensity:0.5" segments-radial="48" segments-tubular="12" animation="property:rotation;to:-90 -360 0;dur:20000;easing:linear;loop:true"></a-torus>
+    <!-- Golden halo -->
+    <a-torus position="0 0.6 -0.1" rotation="0 0 0" radius="0.4" radius-tubular="0.008" color="#FFD54F" material="opacity:0.4;transparent:true;emissive:#FFD54F;emissiveIntensity:0.6" segments-radial="40" segments-tubular="12" animation="property:rotation;to:0 360 0;dur:15000;easing:linear;loop:true"></a-torus>
 
-    <a-sphere position="0.35 0.7 0.2" radius="0.015" color="#40E0D0" material="opacity:0.6;transparent:true;emissive:#40E0D0;emissiveIntensity:0.8" animation="property:position;to:0.35 1.2 0.2;dur:3000;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
-    <a-sphere position="-0.30 0.4 0.15" radius="0.012" color="#7FFFD4" material="opacity:0.5;transparent:true;emissive:#7FFFD4;emissiveIntensity:0.6" animation="property:position;to:-0.30 0.9 0.15;dur:2700;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
-    <a-sphere position="0.20 0.9 -0.1" radius="0.014" color="#40E0D0" material="opacity:0.45;transparent:true;emissive:#40E0D0;emissiveIntensity:0.5" animation="property:position;to:0.20 1.4 -0.1;dur:3200;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
+    <!-- Particles -->
+    <a-sphere position="0.35 0.7 0.2" radius="0.015" color="#FFD54F" material="opacity:0.6;transparent:true;emissive:#FFD54F;emissiveIntensity:0.5" animation="property:position;to:0.35 1.2 0.2;dur:3000;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
+    <a-sphere position="-0.30 0.4 0.15" radius="0.012" color="#FFA726" material="opacity:0.5;transparent:true;emissive:#FFA726;emissiveIntensity:0.4" animation="property:position;to:-0.30 0.9 0.15;dur:2700;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
+    <a-sphere position="0.20 0.9 -0.1" radius="0.014" color="#FFD54F" material="opacity:0.45;transparent:true;emissive:#FFD54F;emissiveIntensity:0.3" animation="property:position;to:0.20 1.4 -0.1;dur:3200;easing:easeInOutSine;loop:true;dir:alternate"></a-sphere>
 
-    <a-torus position="0 0.02 0" rotation="-90 0 0" radius="0.5" radius-tubular="0.004" color="#40E0D0" material="opacity:0.2;transparent:true;emissive:#40E0D0;emissiveIntensity:0.4" animation="property:rotation;to:-90 360 0;dur:8000;easing:linear;loop:true"></a-torus>
+    <!-- Base ring -->
+    <a-torus position="0 0.02 0" rotation="90 0 0" radius="0.5" radius-tubular="0.004" color="#FFD54F" material="opacity:0.2;transparent:true;emissive:#FFD54F;emissiveIntensity:0.3" animation="property:rotation;to:90 360 0;dur:8000;easing:linear;loop:true"></a-torus>
+
 </a-marker>
 <a-entity camera></a-entity>
 </a-scene>
@@ -207,21 +199,16 @@ document.addEventListener('touchstart', function(e) {
     if (x > 0.25 && x < 0.75 && y > 0.15 && y < 0.65) { openDialog(); }
 });
 
-// FIX: Capture both video feed AND WebGL canvas
+// Capture video + canvas composite
 var frameBuffer = document.getElementById('frame-buffer');
 var frameCtx = frameBuffer.getContext('2d');
-
 function captureFrame() {
     var video = document.querySelector('video');
     var arCanvas = document.querySelector('a-scene canvas');
     if (video && arCanvas && arCanvas.width > 0) {
-        var w = arCanvas.width;
-        var h = arCanvas.height;
-        frameBuffer.width = w;
-        frameBuffer.height = h;
-        // Draw camera video feed first
+        var w = arCanvas.width, h = arCanvas.height;
+        frameBuffer.width = w; frameBuffer.height = h;
         frameCtx.drawImage(video, 0, 0, w, h);
-        // Overlay the WebGL canvas (3D objects) on top
         frameCtx.drawImage(arCanvas, 0, 0);
     }
     requestAnimationFrame(captureFrame);
@@ -244,19 +231,19 @@ function takePhoto() {
     ctx.fillStyle = 'rgba(0,0,0,0.55)';
     ctx.fillRect(0, barY, w, barH);
     var fs = Math.max(14, Math.round(w * 0.028));
-    ctx.font = 'bold ' + fs + 'px -apple-system, "Microsoft JhengHei", sans-serif';
-    ctx.fillStyle = '#40E0D0'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+    ctx.font = 'bold '+fs+'px -apple-system,"Microsoft JhengHei",sans-serif';
+    ctx.fillStyle = '#FFD54F'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
     ctx.fillText('AR 觀音祈福體驗', w*0.04, barY+barH*0.35);
-    ctx.font = Math.round(fs*0.75)+'px -apple-system, "Microsoft JhengHei", sans-serif';
+    ctx.font = Math.round(fs*0.75)+'px -apple-system,"Microsoft JhengHei",sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,0.7)';
     ctx.fillText('高雄市訓練就業中心', w*0.04, barY+barH*0.65);
     var now = new Date();
     var ds = now.getFullYear()+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+String(now.getDate()).padStart(2,'0');
-    ctx.font = Math.round(fs*0.7)+'px -apple-system, sans-serif';
+    ctx.font = Math.round(fs*0.7)+'px -apple-system,sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.textAlign = 'right';
     ctx.fillText(ds, w*0.96, barY+barH*0.35);
-    ctx.font = Math.round(fs*0.6)+'px -apple-system, sans-serif';
-    ctx.fillStyle = 'rgba(64,224,208,0.6)';
+    ctx.font = Math.round(fs*0.6)+'px -apple-system,sans-serif';
+    ctx.fillStyle = 'rgba(255,215,80,0.6)';
     ctx.fillText('#AR觀音 #高雄就服站', w*0.96, barY+barH*0.65);
     comp.toBlob(function(blob) {
         capturedBlob = blob;
@@ -282,7 +269,6 @@ function quickShare() {
     if (navigator.share) { navigator.share({title:'AR 觀音祈福體驗',text:'來高雄就服站體驗 AR 觀音！✨',url:location.href}).catch(function(){}); }
     else { navigator.clipboard.writeText(location.href).then(function(){showToast('連結已複製！')}); }
 }
-
 var greetings = ['施主好，我是觀音菩薩。今天想了解什麼呢？','阿彌陀佛，有緣人。讓我指引你前方的道路。','歡迎來到就服站，想問什麼？'];
 var fortunes = [
     {sign:'上上籤',poem:'雲開見月明，\n貴人自然來。\n莫急且耐心，\n好缺在前方。',advice:'近期會有貴人引薦好機會！'},
@@ -310,7 +296,7 @@ function backToMain() {
 }
 function drawFortune() {
     var f=fortunes[Math.floor(Math.random()*fortunes.length)];
-    document.getElementById('fortune-text').innerHTML='<div style="text-align:center;margin-bottom:12px"><span style="font-size:20px;color:#40E0D0;font-weight:700">'+f.sign+'</span></div><div style="text-align:center;font-size:16px;color:rgba(255,255,255,.9);line-height:2;margin-bottom:12px;white-space:pre-line">'+f.poem+'</div><div style="font-size:13px;color:rgba(255,255,255,.6);padding:10px 14px;background:rgba(64,224,208,.06);border-radius:8px">💡 菩薩解籤：'+f.advice+'</div>';
+    document.getElementById('fortune-text').innerHTML='<div style="text-align:center;margin-bottom:12px"><span style="font-size:20px;color:#FFD54F;font-weight:700">'+f.sign+'</span></div><div style="text-align:center;font-size:16px;color:rgba(255,255,255,.9);line-height:2;margin-bottom:12px;white-space:pre-line">'+f.poem+'</div><div style="font-size:13px;color:rgba(255,255,255,.6);padding:10px 14px;background:rgba(255,215,80,.06);border-radius:8px">💡 菩薩解籤：'+f.advice+'</div>';
 }
 function showToast(msg){var t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.remove()},2500)}
 </script>
